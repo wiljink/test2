@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -9,7 +10,7 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/dashboard', function () {
+Route::get('/home', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
@@ -25,10 +26,30 @@ Route::get('/dashboard', function () {
 //routes for member_concern
 //This method generates routes for the standard CRUD operations (Create, Read, Update, Delete) for a resource.
 Route::resource('posts', PostController::class)->except(['index', 'create']);
+
+
 //It defines a GET route to display the form for creating a new post
 Route::get('/posts', [PostController::class, 'index'])->name('posts.index');
-Route::get('/posts/create/user', [PostController::class, 'create'])->name('posts.create');
+Route::get('/posts/create/concern', [PostController::class, 'create'])->name('posts.create');
 Route::post('/posts', [PostController::class, 'store'])->name('posts.store');
+Route::post('/logout',[AuthenticatedSessionController::class, 'destroy'])->name('logout');
+
+//navigation menu
+Route::get('/', function () {
+    return view('home');
+})->name('home');
+
+Route::get('/about', function () {
+    return view('about');
+})->name('about');
+
+Route::get('/services', function () {
+    return view('services');
+})->name('services');
+
+Route::get('/contact', function () {
+    return view('contact');
+})->name('contact');
 
 
 

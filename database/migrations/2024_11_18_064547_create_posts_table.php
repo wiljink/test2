@@ -14,13 +14,16 @@ return new class extends Migration
         Schema::create('posts', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('branch');
+            $table->integer('branch')->unsigned();
             $table->string('contact_number');
-            $table->timestamp('date')->nullable(); // No need to call `change` here in a create migration
             $table->text('concern');
             $table->string('message');
+            $table->string('endorse_by')->nullable();  // Make 'endorse_by' nullable
+            $table->string('endorse_to')->nullable();  // Make 'endorse_to' nullable
+            $table->string('status')->nullable()->default('pending');      // Make 'status' nullable
             $table->timestamps();
         });
+        
     }
 
     /**

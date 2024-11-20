@@ -15,8 +15,10 @@ class Post extends Model
         'name',
         'branch',
         'contact_number',
-        'date',
         'concern',
-        'message'
+        'message',
+        'endorsed_by',
+        'endorsed_to',
+        'status',
     ];
 }
