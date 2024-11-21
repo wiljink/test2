@@ -5,6 +5,8 @@ use App\Http\Controllers\PostController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProductController;
+use App\Http\Middleware\GuestMiddleware;
+use App\Http\Middleware\LoginMiddleware;
 
 Route::get('/', function () {
     return view('welcome');
@@ -25,14 +27,22 @@ Route::get('/home', function () {
 
 //routes for member_concern
 //This method generates routes for the standard CRUD operations (Create, Read, Update, Delete) for a resource.
-Route::resource('posts', PostController::class)->except(['index', 'create']);
 
+Route::get('login', [AuthenticatedSessionController::class, 'create'])
+        ->name('login')->middleware(GuestMiddleware::class);
 
-//It defines a GET route to display the form for creating a new post
-Route::get('/posts', [PostController::class, 'index'])->name('posts.index');
-Route::get('/posts/create/concern', [PostController::class, 'create'])->name('posts.create');
-Route::post('/posts', [PostController::class, 'store'])->name('posts.store');
-Route::post('/logout',[AuthenticatedSessionController::class, 'destroy'])->name('logout');
+Route::post('login', [AuthenticatedSessionController::class, 'store']);
+
+Route::middleware(LoginMiddleware::class)->group(function () {
+    Route::resource('posts', PostController::class)->except(['index', 'create', 'update']);
+    Route::put('/posts/update', [PostController::class, 'update'])->name('posts.update');
+
+    //It defines a GET route to display the form for creating a new post
+    Route::get('/posts', [PostController::class, 'index'])->name('posts.index');
+    Route::get('/posts/create/concern', [PostController::class, 'create'])->name('posts.create');
+    Route::post('/posts', [PostController::class, 'store'])->name('posts.store');
+    Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
+});
 
 //navigation menu
 Route::get('/', function () {
@@ -59,4 +69,4 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-require __DIR__.'/auth.php';
+// require __DIR__ . '/auth.php';
