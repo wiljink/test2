@@ -44,20 +44,17 @@ class PostController extends Controller
             'status' => 'nullable|string|max:255',
         ]);
 
+        
+        // dd($data);
+
+        $post = POST::create($data);
 
 
-        $data['date'] = now();
-        // Find the post by ID
-        $post = Post::findOrFail($data['post_id']); // Throws a 404 if not found
-        dd($post);
-        // Update only the endorse_by, endorse_to, and status fields
-        $post->update([
-            'endorse_by' => $data['endorse_by'],
-            'endorse_to' => $data['endorse_to'],
-            //'status' => $data['status'],
-        ]);
+
         //redirect to index page
-        return redirect(route('posts.index'));
+        // return redirect(route('posts.index'));
+        return redirect()->route('posts.create')->with('success', 'Thank you for posting your concern. A branch representative will contact you.');
+    
     }
 
     public function update(Request $request)

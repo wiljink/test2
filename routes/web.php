@@ -4,7 +4,6 @@ use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\ProductController;
 use App\Http\Middleware\GuestMiddleware;
 use App\Http\Middleware\LoginMiddleware;
 
@@ -16,50 +15,48 @@ Route::get('/home', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-//these are all the routes for CRUD
-// Route::resource('posts', PostController::class)->except(['index', 'create']);
-// Route::get('/product', [ProductController::class, 'index'])->name('product.index');
-// Route::get('/product/create', [ProductController::class, 'create'])->name('product.create');
-// Route::post('/product', [ProductController::class, 'store'])->name('product.store');
-// Route::get('/product/{product}/edit', [ProductController::class, 'edit'])->name('product.edit');
-// Route::put('/product/{product}/update', [ProductController::class, 'update'])->name('product.update');
-// Route::delete('/product/{product}', [ProductController::class, 'destroy'])->name('product.destroy');
 
-//routes for member_concern
-//This method generates routes for the standard CRUD operations (Create, Read, Update, Delete) for a resource.
 
 Route::get('login', [AuthenticatedSessionController::class, 'create'])
         ->name('login')->middleware(GuestMiddleware::class);
 
 Route::post('login', [AuthenticatedSessionController::class, 'store']);
-
+Route::resource('posts', PostController::class)->except(['index', 'create', 'update']);
 Route::middleware(LoginMiddleware::class)->group(function () {
-    Route::resource('posts', PostController::class)->except(['index', 'create', 'update']);
+   
     Route::put('/posts/update', [PostController::class, 'update'])->name('posts.update');
 
-    //It defines a GET route to display the form for creating a new post
+   
     Route::get('/posts', [PostController::class, 'index'])->name('posts.index');
-    Route::get('/posts/create/concern', [PostController::class, 'create'])->name('posts.create');
-    Route::post('/posts', [PostController::class, 'store'])->name('posts.store');
+   
     Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
+    
+   
+});
+
+Route::post('/posts', [PostController::class, 'store'])->name('posts.store');
+ //It defines a GET route to display the form for creating a new post
+Route::get('/posts/create/concern', [PostController::class, 'create'])->name('posts.create');
+Route::get('/posts/success', function () {
+    return view('posts.thank_you');
 });
 
 //navigation menu
-Route::get('/', function () {
-    return view('home');
-})->name('home');
+// Route::get('/', function () {
+//     return view('home');
+// })->name('home');
 
-Route::get('/about', function () {
-    return view('about');
-})->name('about');
+// Route::get('/about', function () {
+//     return view('about');
+// })->name('about');
 
-Route::get('/services', function () {
-    return view('services');
-})->name('services');
+// Route::get('/services', function () {
+//     return view('services');
+// })->name('services');
 
-Route::get('/contact', function () {
-    return view('contact');
-})->name('contact');
+// Route::get('/contact', function () {
+//     return view('contact');
+// })->name('contact');
 
 
 

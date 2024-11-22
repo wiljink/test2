@@ -115,8 +115,11 @@
 <body>
     <form action="{{ route('logout') }}" method="post">
         @csrf
+        @method('post')
         <button type="submit">logout</button>
     </form>
+
+
     <h1 align='center'>Member Concern</h1>
     <div align='center'>
         @if(session()->has('success'))
@@ -228,19 +231,7 @@
             })
         })
     </script>
-    <!-- 
-    <script>
-    $(document).ready(function() {
-        // Event listener for the ENDORSE button using event delegation
-        $(document).on('click', '.endorse-button', function() {
-            // Get the post ID from the data-id attribute
-            const postId = $(this).data('id');
-            
-            // Set the value of the hidden input in the modal
-            $('#post_id').val(postId);
-        });
-    });
-</script> -->
+
 
 
 

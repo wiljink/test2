@@ -82,10 +82,6 @@
             <div>
                 {{ session('success') }}
             </div>
-        @elseif(session()->has('delete'))
-            <div>
-                {{ session('delete') }}
-            </div>
         @endif
     </div>
 
