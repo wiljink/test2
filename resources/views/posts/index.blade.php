@@ -121,16 +121,15 @@
 
 
     <h1 align='center'>Member Concern</h1>
+
     <div align='center'>
+      
         @if(session()->has('success'))
-        <div>
-            {{ session('success') }}
-        </div>
-        @elseif(session()->has('delete'))
-        <div>
-            {{ session('delete') }}
-        </div>
+    <div class="alert alert-success">
+        {!! session('success') !!}
+    </div>
         @endif
+
     </div>
 
 
@@ -174,6 +173,10 @@
             </tbody>
         </table>
 
+    <!-- Pagination Links -->
+    <div class="d-flex justify-content-center">
+    {{ $data->links('pagination::simple-bootstrap-5') }}
+</div>
     </div>
 
     <!-- Blade Template: Access authenticated user data -->
@@ -195,24 +198,27 @@
                         @method('put')
 
                         <!-- Hidden input for the post ID -->
-                        <input type="text" name="post_id" id="post_id">
+                        <input type="hidden" name="post_id" id="post_id">
 
                         <!-- Prepared By - Hidden Field for Authenticated User -->
                         @if($authenticatedUser)
-                        <input type="text" name="endorse_by" id="endorse_by" value="{{ $authenticatedUser['user']['id'] }}">
+                        <input type="hidden" name="endorse_by" id="endorse_by" value="{{ $authenticatedUser['user']['id'] }}">
                         @endif
 
                         <!-- Endorse To - Select Dropdown -->
                         <div class="mb-3">
-                            <label for="endorseTo" class="form-label">Endorse To</label>
-                            <select class="form-select" id="endorseTo" name="endorse_to" required>
-                                <option value="" selected disabled>Select Branch Manager</option>
-                                <option value="1">Wilson Abecia</option>
-                                <option value="2">Norwin Megallon</option>
-                                <option value="3">Ernie Ucang</option>
-                                <!-- Add more options as needed -->
-                            </select>
-                        </div>
+    <label for="endorseTo" class="form-label">Endorse To</label>
+    <select class="form-select" id="endorseTo" name="endorse_to" required>
+        <option value="" selected disabled>Select Branch Manager</option>
+      
+        @forelse($managers['branch_managers'] as $manager) <!-- Use a consistent variable name -->
+            <option value="{{ $manager['id'] }}">{{ $manager['fullname'] }}</option> <!-- Corrected variable name -->
+        @empty
+            <option value="">No managers available</option>
+        @endforelse
+    </select>
+</div>
+
 
                         <!-- Submit Button -->
                         <button type="submit" class="btn btn-success">Submit Endorsement</button>

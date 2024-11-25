@@ -44,7 +44,7 @@ class PostController extends Controller
             'status' => 'nullable|string|max:255',
         ]);
 
-        
+
         // dd($data);
 
         $post = POST::create($data);
@@ -53,12 +53,12 @@ class PostController extends Controller
 
         //redirect to index page
         // return redirect(route('posts.index'));
-        return redirect()->route('posts.create')->with('success', 'Thank you for posting your concern. A branch representative will contact you.');
-    
+        return redirect()->route('posts.create')->with('success', '<span style="color: red;">Thank you for posting your concern. A Branch Representative will contact you soon.</span>');
     }
 
     public function update(Request $request)
     {
+
         $data = $request->validate([
             'post_id' => 'required|integer',
             'endorse_to' => 'required|string',
@@ -71,18 +71,35 @@ class PostController extends Controller
         $post->endorse_by = $data['endorse_by']; // Store the user who prepared the endorsement
         $post->save();
 
-        return redirect(route('posts.index'));
+        return redirect()->route('posts.index')->with('success', '<span style="color: red;">Concern Successfully Endorsed</span>');
     }
-    public function index()
+    public function index(Request $request)
     {
+
+        $response1 = Http::get('https://loantracker.oicapp.com/api/users/branch-managers');
+ 
+
         $user = Auth::user();
         //dd(auth()->user()); // This will dump the current authenticated user, if any.
 
-        $posts = Post::paginate(90);
+       // Retrieve the authenticated user from the session
+       $authenticatedUser = $request->session()->get('authenticated_user');
+
+       if (!$authenticatedUser) {
+           return redirect()->route('login');
+       }
+
+       // Use the user ID from the session to filter the concerns
+       $userId = $authenticatedUser['user']['id'];
+
+       // Retrieve only the concerns that belong to the authenticated user
+       $data = Post::where('id', $userId)->get();
+
+        $posts = Post::paginate(10);
 
         $response = Http::get('https://loantracker.oicapp.com/api/branches');
 
 
-        return view('posts.index', ['data' => $posts, 'branches' => $response->json()]);
+        return view('posts.index', ['data' => $posts, 'branches' => $response->json(), 'managers' => $response1->json()]);
     }
 }

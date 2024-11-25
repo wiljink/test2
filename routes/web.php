@@ -22,6 +22,7 @@ Route::get('login', [AuthenticatedSessionController::class, 'create'])
 
 Route::post('login', [AuthenticatedSessionController::class, 'store']);
 Route::resource('posts', PostController::class)->except(['index', 'create', 'update']);
+
 Route::middleware(LoginMiddleware::class)->group(function () {
    
     Route::put('/posts/update', [PostController::class, 'update'])->name('posts.update');

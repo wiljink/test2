@@ -78,10 +78,11 @@
 <body>
     <h1 align='center'>Create Concern</h1>
     <div align='center'>
-        @if(session()->has('success'))
-            <div>
-                {{ session('success') }}
-            </div>
+       
+    @if(session()->has('success'))
+    <div class="alert alert-success">
+        {!! session('success') !!}
+    </div>
         @endif
     </div>
 
