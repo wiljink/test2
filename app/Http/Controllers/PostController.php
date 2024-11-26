@@ -27,8 +27,7 @@ class PostController extends Controller
     public function store(Request $request)
     {
 
-        //dd($request);
-        //dd($request->all()); 
+   
 
         //Validate the request
         $data = $request->validate([
@@ -45,7 +44,7 @@ class PostController extends Controller
         ]);
 
 
-        // dd($data);
+        
 
         $post = POST::create($data);
 
@@ -76,30 +75,32 @@ class PostController extends Controller
     public function index(Request $request)
     {
 
-        $response1 = Http::get('https://loantracker.oicapp.com/api/users/branch-managers');
- 
+      // Fetch branch managers from the external API
+    $response1 = Http::get('https://loantracker.oicapp.com/api/users/branch-managers');
+    
+    // Retrieve the authenticated user from the session
+    $authenticatedUser = $request->session()->get('authenticated_user');
+       
+    // If no authenticated user, redirect to login
+    if (!$authenticatedUser) {
+        return redirect()->route('login');
+    }
+    //$response3 = Http::get('https://loantracker.oicapp.com/api/users/login');
+    // Use the user's branch_id from the session to filter the concerns
+    $userId = $authenticatedUser['user']['id'];
+    //dd($userBranchId);
+    // Retrieve only the concerns that belong to the branch managed by the authenticated user
+    
+   // Retrieve only the concerns that belong to the authenticated user
+   $data = Post::where('id', $userId)->get();
+    dd($data);
+   $posts = Post::paginate(10);
+    // Fetch branches from the external API
+    $response = Http::get('https://loantracker.oicapp.com/api/branches');
 
-        $user = Auth::user();
-        //dd(auth()->user()); // This will dump the current authenticated user, if any.
+    // Return the view with filtered data
+    return view('posts.index', ['data' => $posts, 'branches' => $response->json(), 'managers' => $response1->json()]);
+    
 
-       // Retrieve the authenticated user from the session
-       $authenticatedUser = $request->session()->get('authenticated_user');
-
-       if (!$authenticatedUser) {
-           return redirect()->route('login');
-       }
-
-       // Use the user ID from the session to filter the concerns
-       $userId = $authenticatedUser['user']['id'];
-
-       // Retrieve only the concerns that belong to the authenticated user
-       $data = Post::where('id', $userId)->get();
-
-        $posts = Post::paginate(10);
-
-        $response = Http::get('https://loantracker.oicapp.com/api/branches');
-
-
-        return view('posts.index', ['data' => $posts, 'branches' => $response->json(), 'managers' => $response1->json()]);
     }
 }
