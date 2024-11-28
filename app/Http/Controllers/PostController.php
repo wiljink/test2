@@ -78,6 +78,7 @@ class PostController extends Controller
         if (!$authenticatedUser) {
             return redirect()->route('login');
         }
+        //updated code
         // Retrieve only the concerns that belong to the authenticated user
         $posts = Post::where('branch', $authenticatedUser['user']['officer']['branch_id'])->get();
         if ($authenticatedUser['user']['officer']['branch_id'] === 23) {
