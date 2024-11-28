@@ -27,7 +27,7 @@ class PostController extends Controller
     public function store(Request $request)
     {
 
-   
+
 
         //Validate the request
         $data = $request->validate([
@@ -44,7 +44,7 @@ class PostController extends Controller
         ]);
 
 
-        
+
 
         $post = POST::create($data);
 
@@ -67,6 +67,7 @@ class PostController extends Controller
         // Assuming you have a `Post` model and the `id` to be updated
         $post = Post::findOrFail($data['post_id']);
         $post->endorse_to = $data['endorse_to'];
+        //dd($post);
         $post->endorse_by = $data['endorse_by']; // Store the user who prepared the endorsement
         $post->save();
 
@@ -75,32 +76,37 @@ class PostController extends Controller
     public function index(Request $request)
     {
 
-      // Fetch branch managers from the external API
-    $response1 = Http::get('https://loantracker.oicapp.com/api/users/branch-managers');
-    
-    // Retrieve the authenticated user from the session
-    $authenticatedUser = $request->session()->get('authenticated_user');
+        // Fetch branch managers from the external API
+        $response1 = Http::get('https://loantracker.oicapp.com/api/users/branch-managers');
+
+        // Retrieve the authenticated user from the session
+        $authenticatedUser = $request->session()->get('authenticated_user');
+
+        // If no authenticated user, redirect to login
+        if (!$authenticatedUser) {
+            return redirect()->route('login');
+        }
+
+
        
-    // If no authenticated user, redirect to login
-    if (!$authenticatedUser) {
-        return redirect()->route('login');
-    }
-    //$response3 = Http::get('https://loantracker.oicapp.com/api/users/login');
-    // Use the user's branch_id from the session to filter the concerns
-    $userId = $authenticatedUser['user']['id'];
-    //dd($userBranchId);
-    // Retrieve only the concerns that belong to the branch managed by the authenticated user
-    
-   // Retrieve only the concerns that belong to the authenticated user
-   $data = Post::where('id', $userId)->get();
-    dd($data);
-   $posts = Post::paginate(10);
-    // Fetch branches from the external API
-    $response = Http::get('https://loantracker.oicapp.com/api/branches');
+        $posts = Post::where('branch', $authenticatedUser['user']['officer']['branch_id'])
+            ->paginate(10);
+            //if authenticated user is admin can view all posts
+        if ($authenticatedUser['user']['officer']['branch_id'] == 23) {
+            $posts = Post::paginate(10);
+        }
+        
 
-    // Return the view with filtered data
-    return view('posts.index', ['data' => $posts, 'branches' => $response->json(), 'managers' => $response1->json()]);
-    
 
+
+        // Fetch branches from the external API
+        $response = Http::get('https://loantracker.oicapp.com/api/branches');
+
+        // Return the view with filtered data
+        return view('posts.index', [
+            'data' => $posts,
+            'branches' => $response->json(),
+            'managers' => $response1->json()
+        ]);
     }
 }
