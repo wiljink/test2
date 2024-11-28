@@ -213,73 +213,42 @@
 
     <div class="container">
 
-    <table class="table">
-    <thead>
-        <tr>
-            <th scope="col">ID</th>
-            <th scope="col">NAME</th>
-            <th scope="col">BRANCH</th>
-            <th scope="col">CONTACT NUMBER</th>
-            <th scope="col">CONCERN RECEIVED DATE</th>
-            <th scope="col">CONCERN</th>
-            <th scope="col">MESSAGE</th>
-
-            @php
-                $authenticatedUser = session('authenticated_user');
-            @endphp
-
-            @if($authenticatedUser['user']['account_type_id'] == 7)
-                <th scope="col">PREPARED BY</th>
-                <th scope="col">DAYS RESOLVED</th>
-                <th scope="col">STATUS</th>
-                <th scope="col">ACTION</th> <!-- Add ACTION column -->
-            @else
-                <th scope="col">ACTION</th> <!-- ACTION column for other users -->
-            @endif
-        </tr>
-    </thead>
-    <tbody>
-        @foreach($data as $posts)
-        <tr>
-            <td>{{ $posts->id }}</td>
-            <td>{{ $posts->name }}</td>
-            @foreach($branches as $branch)
-                @if($posts->branch == $branch['id'])
-                    <td>{{ $branch['branch_name'] }}</td>
-                @endif
-            @endforeach
-            <td>{{ $posts->contact_number }}</td>
-            <td>{{ $posts->created_at->format('Y-m-d') }}</td>
-            <td>{{ $posts->concern }}</td>
-            <td>{{ $posts->message }}</td>
-
-            @if($authenticatedUser['user']['account_type_id'] == 7)
-                <td>{{ $posts->prepared_by ?? 'N/A' }}</td>
-                <td>{{ $posts->days_resolved ?? 'N/A' }}</td>
-                <td>{{ $posts->status ?? 'Pending' }}</td>
-                <td>
-                    <!-- RESOLVE link triggers the modal -->
-                    <a href="#" id="resolveButton" class="btn btn-success" data-bs-toggle="modal"
-                    data-bs-target="#resolveModal" data-id="{{ $posts->id }}" data-name="{{ $posts->name }}">
-                    ANALYZE
-                    </a>
-                </td>
-
-            @else
-                <td>
-                    <!-- Add actions for non-account_type_id == 7 -->
-                    <a href="#" id="endorseButton" class="btn btn-primary" data-bs-toggle="modal"
-                       data-bs-target="#endorseModal" data-id="{{ $posts->id }}" data-name="{{ $posts->name }}">
-                       ENDORSE
-                    </a>
-                </td>
-            @endif
-        </tr>
-        @endforeach
-    </tbody>
-</table>
-
-
+        <table class="table">
+            <thead>
+                <tr>
+                    <th scope="col">ID</th>
+                    <th scope="col">NAME</th>
+                    <th scope="col">BRANCH</th>
+                    <th scope="col">CONTACT NUMBER</th>
+                    <th scope="col">CONCERN RECIEVED DATE</th>
+                    <th scope="col">PREPARED BY</th>
+                    <th scope="col">MESSAGE</th>
+                    <th scope="col">ACTION</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($data as $posts)
+                <tr>
+                    <td>{{$posts->id}}</td>
+                    <td>{{$posts->name}}</td>
+                    @foreach($branches as $branch)
+                    @if($posts->branch==$branch['id'])
+                    <td>{{$branch['branch_name']}}</td>
+                    @endif
+                    @endforeach
+                    <td>{{$posts->contact_number}}</td>
+                    <td>{{$posts->created_at}}</td>
+                    <td>{{$posts->concern}}</td>
+                    <td>{{$posts->message}}</td>
+                    <td> <!-- ENDORSE link triggers the modal -->
+                        <a href="#" id="endorseButton" class="btn btn-primary" data-bs-toggle="modal"
+                            data-bs-target="#endorseModal" data-id="{{$posts->id}}"
+                            data-name="{{$posts->name}}">ENDORSE</a>
+                    </td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
 
     <!-- Pagination Links -->
     <div class="d-flex justify-content-center">

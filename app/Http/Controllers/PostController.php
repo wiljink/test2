@@ -80,7 +80,7 @@ class PostController extends Controller
         }
         //updated code
         // Retrieve only the concerns that belong to the authenticated user
-        $posts = Post::where('branch', $authenticatedUser['user']['officer']['branch_id'])->get();
+        $posts = Post::where('branch', $authenticatedUser['user']['officer']['branch_id'])->paginate(10);
         if ($authenticatedUser['user']['officer']['branch_id'] === 23) {
             $posts = Post::paginate(10);
         }
