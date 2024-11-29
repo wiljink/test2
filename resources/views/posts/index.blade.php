@@ -258,11 +258,11 @@
                 <td>{{ $posts->days_resolved ?? 'N/A' }}</td>
                 <td>{{ $posts->status ?? 'Pending' }}</td>
                 <td>
-                    <!-- RESOLVE link triggers the modal -->
-                    <a href="#" id="resolveButton" class="btn btn-success" data-bs-toggle="modal"
-                    data-bs-target="#resolveModal" data-id="{{ $posts->id }}" data-name="{{ $posts->name }}">
-                    ANALYZE
-                    </a>
+                <a href="#" id="analyzeButton" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#analyzeModal" data-id="{{ $posts->id }}" 
+                data-name="{{ $posts->name }}" data-branch="{{ $posts->branch}}" data-contact="{{ $posts->contact_number }}">
+                ANALYZE
+                </a>
+
                 </td>
 
             @else
@@ -292,7 +292,7 @@
     $authenticatedUser = session('authenticated_user');
     @endphp
 
-    <!-- Modal Form -->
+    <!-- Modal Form for HO staff -->
     <div class="modal fade" id="endorseModal" tabindex="-1" aria-labelledby="endorseModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -306,11 +306,11 @@
                         @method('put')
 
                         <!-- Hidden input for the post ID -->
-                        <input type="hidden" name="post_id" id="post_id">
+                        <input type="text" name="post_id" id="post_id">
 
                         <!-- Prepared By - Hidden Field for Authenticated User -->
                         @if($authenticatedUser)
-                        <input type="hidden" name="endorse_by" id="endorse_by" value="{{ $authenticatedUser['user']['id'] }}">
+                        <input type="text" name="endorse_by" id="endorse_by" value="{{ $authenticatedUser['user']['id'] }}">
                         @endif
 
                         <!-- Endorse To - Select Dropdown -->
@@ -336,6 +336,121 @@
         </div>
     </div>
 
+
+    <!-- modal form for Branch Managers -->
+    <!-- Analyze Modal Form -->
+    <div class="modal fade" id="analyzeModal" tabindex="-1" aria-labelledby="analyzeModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg"> <!-- Changed this line to use 'modal-lg' -->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="analyzeModalLabel">Analyze Concern</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="analyzeForm" action="{{ route('posts.analyze') }}" method="POST">
+                        @csrf
+                        @method('put')
+
+                       <!-- Hidden input for the post ID -->
+                       <input type="text" name="posts_id" id="posts_id" value="">
+
+
+                         <!-- Prepared By - Hidden Field for Authenticated User -->
+                         @if($authenticatedUser)
+                        <input type="text" name="endorse_by" id="endorse_by" value="{{ $authenticatedUser['user']['id'] }}">
+                        @endif
+
+                        <!-- Display Name -->
+                        <div class="mb-3">
+                            <label for="analyzePostName" class="form-label">Member Name</label>
+                            <input type="text" class="form-control" id="analyzePostName" readonly>
+                        </div>
+
+                        <!-- Display Branch -->
+                        <div class="mb-3">
+                            <label for="analyzeBranch" class="form-label">Branch</label>
+                            <input type="text" class="form-control" name="branch_name" id="analyzeBranch" readonly>
+                        </div>
+
+                        <!-- Display Contact Number -->
+                        <div class="mb-3">
+                            <label for="analyzeContact" class="form-label">Contact Number</label>
+                            <input type="text" class="form-control" name="contact_number" id="analyzeContact" readonly>
+                        </div>
+
+                        <!-- Tasks Section -->
+                        <div class="mb-3">
+                            <label class="form-label">Action Taken</label>
+                            <div id="tasksContainer">
+                                <!-- Initial Task -->
+                                <input type="text" name="tasks[]" class="form-control mb-2" placeholder="Action 1" required>
+                            </div>
+                            <button type="button" id="addTaskButton" class="btn btn-secondary">Add Task</button>
+                            <button type="button" id="removeTaskButton" class="btn btn-danger" style="display: none;">Less Task</button>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <button type="submit" class="btn btn-success">Resolved</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+
+
+    <!-- jQuery Full Version -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- Bootstrap 5 JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+
+
+<script>
+
+$(document).on('click', '#analyzeButton', function () {
+    const postId = $(this).data('id');
+    const postName = $(this).data('name');
+    const postBranch = $(this).data('branch');
+    const postContact = $(this).data('contact');
+
+
+
+    $('#posts_id').val(postId);
+    $('#analyzePostName').val(postName);
+    $('#analyzeBranch').val(postBranch || '');
+    $('#analyzeContact').val(postContact || '');
+});
+
+</script>
+
+<script>
+    $(document).ready(function() {
+        // Add Task functionality
+        $(document).on('click', '#addTaskButton', function () {
+            const taskInput = '<input type="text" name="tasks[]" class="form-control mb-2" placeholder="Action" required>';
+            $('#tasksContainer').append(taskInput);
+            
+            // Show "Remove Task" button when at least one task is added
+            $('#removeTaskButton').show();
+        });
+
+        // Remove Task functionality
+        $(document).on('click', '#removeTaskButton', function () {
+            // Remove the last task input field
+            $('#tasksContainer input').last().remove();
+
+            // Hide "Remove Task" button if there are no more task fields
+            if ($('#tasksContainer input').length === 0) {
+                $('#removeTaskButton').hide();
+            }
+        });
+    });
+</script>
+
+
     <script>
         $(document).ready(function() {
 
@@ -345,7 +460,6 @@
             })
         })
     </script>
-
 
 
 
@@ -376,7 +490,7 @@
     </script>
 
 
-    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <!-- <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script> -->
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
     <!-- Option 1: Bootstrap Bundle with Popper -->

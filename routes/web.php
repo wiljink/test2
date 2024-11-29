@@ -27,6 +27,8 @@ Route::middleware(LoginMiddleware::class)->group(function () {
    
     Route::put('/posts/update', [PostController::class, 'update'])->name('posts.update');
 
+    Route::put('/posts/analyze', [PostController::class, 'analyze'])->name('posts.analyze');
+
    
     Route::get('/posts', [PostController::class, 'index'])->name('posts.index');
    
