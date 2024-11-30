@@ -12,12 +12,12 @@ class PostController extends Controller
     //
     public function create()
     {
-        $response = Http::get('https://loantracker.oicapp.com/api/branches');
-
+        $response = Http::get('https://loantracker.oicapp.com/api/v1/branches');
+        $branches = $response->json();
         return view(
             'posts.create',
             [
-                'branches' => $response->json(),
+                'branches' => $branches['branches'],
             ]
         );
     }
@@ -69,26 +69,23 @@ class PostController extends Controller
     {
 
         // Fetch branch managers from the external API
-        $response1 = Http::get('https://loantracker.oicapp.com/api/users/branch-managers');
+        $response1 = Http::get('https://loantracker.oicapp.com/api/v1/branches');
+        $branches = $response1->json();
 
-        // Retrieve the authenticated user from the session
-        $authenticatedUser = $request->session()->get('authenticated_user');
+        $token = session('token');
 
-        // If no authenticated user, redirect to login
-        if (!$authenticatedUser) {
-            return redirect()->route('login');
-        }
+        $response2 = Http::withToken($token)->get("https://loantracker.oicapp.com/api/v1/users/logged-user");
+        $authenticatedUser = $response2->json();
         //updated code
         // Retrieve only the concerns that belong to the authenticated user
-        $posts = Post::where('branch', $authenticatedUser['user']['officer']['branch_id'])->paginate(10);
-        if ($authenticatedUser['user']['officer']['branch_id'] === 23) {
+        $posts = Post::where('branch', $authenticatedUser['user']['branch_id'])->paginate(10);
+        if ($authenticatedUser['user']['branch_id'] === 23) {
             $posts = Post::paginate(10);
         }
-        // Fetch branches from the external API
-        $response = Http::get('https://loantracker.oicapp.com/api/branches');
+
 
         // Return the view with filtered data
-        return view('posts.index', ['data' => $posts, 'branches' => $response->json(), 'managers' => $response1->json()]);
+        return view('posts.index', ['data' => $posts, 'branches' => $branches['branches'], 'authenticatedUser' => $authenticatedUser['user']]);
 
     }
 }

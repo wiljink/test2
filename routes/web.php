@@ -23,18 +23,19 @@ Route::get('login', [AuthenticatedSessionController::class, 'create'])
 Route::post('login', [AuthenticatedSessionController::class, 'store']);
 Route::resource('posts', PostController::class)->except(['index', 'create', 'update']);
 
+
 Route::middleware(LoginMiddleware::class)->group(function () {
-   
+
     Route::put('/posts/update', [PostController::class, 'update'])->name('posts.update');
 
     Route::put('/posts/analyze', [PostController::class, 'analyze'])->name('posts.analyze');
 
-   
     Route::get('/posts', [PostController::class, 'index'])->name('posts.index');
-   
+
+
     Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
-    
-   
+
+
 });
 
 Route::post('/posts', [PostController::class, 'store'])->name('posts.store');

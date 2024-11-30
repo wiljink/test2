@@ -15,11 +15,11 @@ class LoginMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (!session('authenticated_user')) {
+        if (!session('token')) {
            return redirect()->route('login');
         }
         return $next($request);
     }
-   
+
 
 }

@@ -121,7 +121,7 @@
             <!-- Logo and Brand Name -->
             <a class="navbar-brand d-flex align-items-center text-white" href="#">
                 <img src="{{ asset('images/oicLogo.png') }}" alt="Logo" width="170" height="40" class="me-2">
-                
+
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
@@ -187,7 +187,7 @@
     <!-- Your existing content remains unchanged -->
 
     <!-- Rest of the Page Content -->
-  
+
     <div align='center'>
         @if(session()->has('success'))
         <div class="alert alert-success">
@@ -200,7 +200,7 @@
 
 
     <div align='center'>
-      
+
         @if(session()->has('success'))
     <div class="alert alert-success">
         {!! session('success') !!}
@@ -209,7 +209,7 @@
 
     </div>
 
-      
+
 
     <div class="container">
 
@@ -224,11 +224,8 @@
             <th scope="col">CONCERN</th>
             <th scope="col">MESSAGE</th>
 
-            @php
-                $authenticatedUser = session('authenticated_user');
-            @endphp
 
-            @if($authenticatedUser['user']['account_type_id'] == 7)
+            @if($authenticatedUser['branch_id']== 7)
                 <th scope="col">PREPARED BY</th>
                 <th scope="col">DAYS RESOLVED</th>
                 <th scope="col">STATUS</th>
@@ -253,12 +250,12 @@
             <td>{{ $posts->concern }}</td>
             <td>{{ $posts->message }}</td>
 
-            @if($authenticatedUser['user']['account_type_id'] == 7)
+            @if($authenticatedUser['account_type_id'] == 7)
                 <td>{{ $posts->prepared_by ?? 'N/A' }}</td>
                 <td>{{ $posts->days_resolved ?? 'N/A' }}</td>
                 <td>{{ $posts->status ?? 'Pending' }}</td>
                 <td>
-                <a href="#" id="analyzeButton" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#analyzeModal" data-id="{{ $posts->id }}" 
+                <a href="#" id="analyzeButton" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#analyzeModal" data-id="{{ $posts->id }}"
                 data-name="{{ $posts->name }}" data-branch="{{ $posts->branch}}" data-contact="{{ $posts->contact_number }}">
                 ANALYZE
                 </a>
@@ -288,9 +285,7 @@
     </div>
 
     <!-- Blade Template: Access authenticated user data -->
-    @php
-    $authenticatedUser = session('authenticated_user');
-    @endphp
+
 
     <!-- Modal Form for HO staff -->
     <div class="modal fade" id="endorseModal" tabindex="-1" aria-labelledby="endorseModalLabel" aria-hidden="true">
@@ -310,7 +305,7 @@
 
                         <!-- Prepared By - Hidden Field for Authenticated User -->
                         @if($authenticatedUser)
-                        <input type="text" name="endorse_by" id="endorse_by" value="{{ $authenticatedUser['user']['id'] }}">
+                        <input type="text" name="endorse_by" id="endorse_by" value="{{ $authenticatedUser['id'] }}">
                         @endif
 
                         <!-- Endorse To - Select Dropdown -->
@@ -318,12 +313,10 @@
     <label for="endorseTo" class="form-label">Endorse To</label>
     <select class="form-select" id="endorseTo" name="endorse_to" required>
         <option value="" selected disabled>Select Branch Manager</option>
-      
-        @forelse($managers['branch_managers'] as $manager) <!-- Use a consistent variable name -->
-            <option value="{{ $manager['id'] }}">{{ $manager['fullname'] }}</option> <!-- Corrected variable name -->
-        @empty
-            <option value="">No managers available</option>
-        @endforelse
+
+        @foreach($branches as $branch) <!-- Use a consistent variable name -->
+            <option value="{{ optional($branch['branch_manager'])['id'] }}">{{optional($branch['branch_manager'])['fullname'] }}</option> <!-- Corrected variable name -->
+        @endforeach
     </select>
 </div>
 
@@ -357,7 +350,7 @@
 
                          <!-- Prepared By - Hidden Field for Authenticated User -->
                          @if($authenticatedUser)
-                        <input type="text" name="endorse_by" id="endorse_by" value="{{ $authenticatedUser['user']['id'] }}">
+                        <input type="text" name="endorse_by" id="endorse_by" value="{{ $authenticatedUser['id'] }}">
                         @endif
 
                         <!-- Display Name -->
@@ -432,7 +425,7 @@ $(document).on('click', '#analyzeButton', function () {
         $(document).on('click', '#addTaskButton', function () {
             const taskInput = '<input type="text" name="tasks[]" class="form-control mb-2" placeholder="Action" required>';
             $('#tasksContainer').append(taskInput);
-            
+
             // Show "Remove Task" button when at least one task is added
             $('#removeTaskButton').show();
         });

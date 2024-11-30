@@ -29,7 +29,7 @@ class AuthenticatedSessionController extends Controller
     {
         // $request->authenticate();
 
-        $login_api = Http::post("https://loantracker.oicapp.com/api/users/login", [
+        $login_api = Http::post("https://loantracker.oicapp.com/api/v1/login", [
             'company_id' => $request->input('email'),
             'password' => $request->input("password")
         ]);
@@ -37,20 +37,18 @@ class AuthenticatedSessionController extends Controller
 
         $user = $login_api->json();
 
-        if ($user['message'] == "credentials do not match") {
+        if (!isset($user['token']) || (isset($user['message']))) {
 
             throw ValidationException::withMessages([
                 'email' => $user['message']
             ]);
         }
 
-        // $request->session()->regenerate();
 
-        $request->session()->put('authenticated_user', $user);
+        $request->session()->put('token', $user['token']);
 
         return redirect()->route('posts.index');
 
-        // return redirect()->intended(route('dashboard', absolute: false));
     }
 
     /**
@@ -58,6 +56,8 @@ class AuthenticatedSessionController extends Controller
      */
     public function destroy(Request $request): RedirectResponse
     {
+        $token = session('token');
+        Http::withToken($token)->post("https://loantracker.oicapp.com/api/v1/logout");
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();

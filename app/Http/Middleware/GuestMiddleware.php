@@ -16,13 +16,10 @@ class GuestMiddleware
     public function handle(Request $request, Closure $next): Response
     {
 
-        $session = session('authenticated_user');
+        $token = session('token');
 
-        if (isset($session) && $session['message'] == 'login success') {
+        if (isset($token)) {
             return redirect()->route('posts.index');
-        }
-        if (isset($session) || $session == null) {
-            return $next($request);
         }
         return $next($request);
     }
