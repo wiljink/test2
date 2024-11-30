@@ -88,4 +88,15 @@ class PostController extends Controller
         return view('posts.index', ['data' => $posts, 'branches' => $branches['branches'], 'authenticatedUser' => $authenticatedUser['user']]);
 
     }
+
+    public function analyze(Request $request)
+    {
+        $post = Post::findOrFail($request->posts_id); // Use the ID passed in the URL
+        $post->tasks = json_encode($request->input('tasks'));
+        $post->endorse_by = $request->input('endorse_by');
+        $post->status = 'Resolved';
+        $post->save();
+    
+        return redirect()->route('posts.index')->with('success', 'Post analyzed successfully!');
+    }
 }

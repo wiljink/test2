@@ -216,7 +216,7 @@
     <table class="table">
     <thead>
         <tr>
-            <th scope="col">ID</th>
+        <th scope="col">ID</th>
             <th scope="col">NAME</th>
             <th scope="col">BRANCH</th>
             <th scope="col">CONTACT NUMBER</th>
@@ -225,11 +225,12 @@
             <th scope="col">MESSAGE</th>
 
 
-            @if($authenticatedUser['branch_id']== 7)
-                <th scope="col">PREPARED BY</th>
+            @if($authenticatedUser['account_type_id']== 7)
+            <th scope="col">PREPARED BY</th>
+                <!-- <th scope="col">TASK</th> -->
                 <th scope="col">DAYS RESOLVED</th>
                 <th scope="col">STATUS</th>
-                <th scope="col">ACTION</th> <!-- Add ACTION column -->
+                <th scope="col">ACTION</th> <
             @else
                 <th scope="col">ACTION</th> <!-- ACTION column for other users -->
             @endif
@@ -251,7 +252,10 @@
             <td>{{ $posts->message }}</td>
 
             @if($authenticatedUser['account_type_id'] == 7)
-                <td>{{ $posts->prepared_by ?? 'N/A' }}</td>
+        
+            <td>{{ $posts->endorse_by ?? 'N/A' }}</td>
+
+                <!-- <td>{{ $posts->tasks }}</td> -->
                 <td>{{ $posts->days_resolved ?? 'N/A' }}</td>
                 <td>{{ $posts->status ?? 'Pending' }}</td>
                 <td>
