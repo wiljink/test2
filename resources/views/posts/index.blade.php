@@ -211,7 +211,7 @@
 
 
 
-    <div class="container">
+    <div class="container d-flex flex-column align-items-center my-4" style="min-height: 100vh;">
 
     <table class="table">
     <thead>
@@ -227,7 +227,7 @@
 
             @if($authenticatedUser['account_type_id']== 7)
             <th scope="col">PREPARED BY</th>
-                <!-- <th scope="col">TASK</th> -->
+                <th scope="col">TASK</th>
                 <th scope="col">DAYS RESOLVED</th>
                 <th scope="col">STATUS</th>
                 <th scope="col">ACTION</th> <
@@ -255,7 +255,7 @@
         
             <td>{{ $posts->endorse_by ?? 'N/A' }}</td>
 
-                <!-- <td>{{ $posts->tasks }}</td> -->
+                <td>{{ $posts->tasks }}</td>
                 <td>{{ $posts->days_resolved ?? 'N/A' }}</td>
                 <td>{{ $posts->status ?? 'Pending' }}</td>
                 <td>
@@ -269,10 +269,11 @@
             @else
                 <td>
                     <!-- Add actions for non-account_type_id == 7 -->
-                    <a href="#" id="endorseButton" class="btn btn-primary" data-bs-toggle="modal"
-                       data-bs-target="#endorseModal" data-id="{{ $posts->id }}" data-name="{{ $posts->name }}">
-                       ENDORSE
-                    </a>
+                    <a href="#" id="endorseButton" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#endorseModal" 
+                    data-id="{{ $posts->id }}" data-branch="{{ $posts->branch }}">
+                    ENDORSE
+                </a>
+
                 </td>
             @endif
         </tr>
@@ -313,16 +314,20 @@
                         @endif
 
                         <!-- Endorse To - Select Dropdown -->
-                        <div class="mb-3">
+                      <!-- Endorse To - Select Dropdown -->
+<div class="mb-3">
     <label for="endorseTo" class="form-label">Endorse To</label>
     <select class="form-select" id="endorseTo" name="endorse_to" required>
         <option value="" selected disabled>Select Branch Manager</option>
-
-        @foreach($branches as $branch) <!-- Use a consistent variable name -->
-            <option value="{{ optional($branch['branch_manager'])['id'] }}">{{optional($branch['branch_manager'])['fullname'] }}</option> <!-- Corrected variable name -->
+        @foreach($branches as $branch)
+            <option value="{{ optional($branch['branch_manager'])['id'] }}" 
+                    data-branch-id="{{ $branch['id'] }}">
+                {{ optional($branch['branch_manager'])['fullname'] }}
+            </option>
         @endforeach
     </select>
 </div>
+
 
 
                         <!-- Submit Button -->
@@ -447,16 +452,52 @@ $(document).on('click', '#analyzeButton', function () {
     });
 </script>
 
+<!-- disable endorse button after submitting -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const endorseForm = document.getElementById('endorseForm');
+        const submitButton = endorseForm.querySelector('button[type="submit"]');
+
+        endorseForm.addEventListener('submit', function () {
+            // Disable the submit button to prevent duplicates
+            submitButton.disabled = true;
+            submitButton.textContent = 'Submitting...';
+        });
+    });
+</script>
+
+
+
 
     <script>
-        $(document).ready(function() {
+    document.addEventListener('DOMContentLoaded', function () {
+        const endorseButtons = document.querySelectorAll('#endorseButton');
+        const endorseModal = document.getElementById('endorseModal');
+        const postInput = document.getElementById('post_id');
+        const endorseToDropdown = document.getElementById('endorseTo');
 
-            $(document).on('click', '#endorseButton', function() {
-                id = $(this).attr('data-id')
-                $('#post_id').val(id)
-            })
-        })
-    </script>
+        endorseButtons.forEach(button => {
+            button.addEventListener('click', function () {
+                // Get post data from the button
+                const postId = this.getAttribute('data-id');
+                const branchId = this.getAttribute('data-branch');
+
+                // Set the post_id in the form
+                postInput.value = postId;
+
+                // Pre-select the branch manager based on branch_id
+                const options = endorseToDropdown.options;
+                for (let i = 0; i < options.length; i++) {
+                    if (options[i].getAttribute('data-branch-id') === branchId) {
+                        options[i].selected = true;
+                        break;
+                    }
+                }
+            });
+        });
+    });
+</script>
+
 
 
 
