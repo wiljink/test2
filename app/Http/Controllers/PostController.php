@@ -60,6 +60,7 @@ class PostController extends Controller
         $post->endorse_to = $data['endorse_to'];
         //dd($post);
         $post->endorse_by = $data['endorse_by']; // Store the user who prepared the endorsement
+        $post->status = 'Pending'; // Set status to "Pending"
         $post->save();
 
         return redirect()->route('posts.index')->with('success', '<span style="color: red;">Concern Successfully Endorsed</span>');
@@ -83,6 +84,7 @@ class PostController extends Controller
             $posts = Post::paginate(10);
         }
 
+        $data = Post::where('status', '!=', 'Resolved')->get();
 
         // Return the view with filtered data
         return view('posts.index', ['data' => $posts, 'branches' => $branches['branches'], 'authenticatedUser' => $authenticatedUser['user']]);
@@ -99,4 +101,14 @@ class PostController extends Controller
     
         return redirect()->route('posts.index')->with('success', 'Post analyzed successfully!');
     }
+    public function resolveConcern($id)
+{
+    $post = Post::findOrFail($id);
+
+    // Mark the concern as resolved
+    $post->status = 'Resolved';
+    $post->save();
+
+    return redirect()->back()->with('success', 'Concern resolved successfully!');
+}
 }

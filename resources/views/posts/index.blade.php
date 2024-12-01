@@ -175,40 +175,6 @@
 </body>
 
 
-    <!-- Rest of the Page Content -->
-    <div align='center'>
-        @if(session()->has('success'))
-        <div class="alert alert-success">
-            {!! session('success') !!}
-        </div>
-        @endif
-    </div>
-
-    <!-- Your existing content remains unchanged -->
-
-    <!-- Rest of the Page Content -->
-
-    <div align='center'>
-        @if(session()->has('success'))
-        <div class="alert alert-success">
-            {!! session('success') !!}
-        </div>
-        @endif
-    </div>
-
-    <!-- Your existing content remains unchanged -->
-
-
-    <div align='center'>
-
-        @if(session()->has('success'))
-    <div class="alert alert-success">
-        {!! session('success') !!}
-    </div>
-        @endif
-
-    </div>
-
 
 
     <div class="container d-flex flex-column align-items-center my-4" style="min-height: 100vh;">
@@ -230,7 +196,7 @@
                 <th scope="col">TASK</th>
                 <th scope="col">DAYS RESOLVED</th>
                 <th scope="col">STATUS</th>
-                <th scope="col">ACTION</th> <
+                <th scope="col">ACTION</th> 
             @else
                 <th scope="col">ACTION</th> <!-- ACTION column for other users -->
             @endif
@@ -270,9 +236,11 @@
                 <td>
                     <!-- Add actions for non-account_type_id == 7 -->
                     <a href="#" id="endorseButton" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#endorseModal" 
-                    data-id="{{ $posts->id }}" data-branch="{{ $posts->branch }}">
-                    ENDORSE
-                </a>
+   data-id="{{ $posts->id }}" data-branch="{{ $posts->branch }}"
+   data-endorsed="{{ $posts->status == 'Endorsed' || $posts->status == 'Resolved' ? 'true' : 'false' }}">
+    ENDORSE
+</a>
+
 
                 </td>
             @endif
@@ -331,7 +299,7 @@
 
 
                         <!-- Submit Button -->
-                        <button type="submit" class="btn btn-success">Submit Endorsement</button>
+                        <button type="submit" class="btn btn-success" id="submitEndorsement">Submit Endorsement</button>
                     </form>
                 </div>
             </div>
@@ -452,19 +420,8 @@ $(document).on('click', '#analyzeButton', function () {
     });
 </script>
 
-<!-- disable endorse button after submitting -->
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const endorseForm = document.getElementById('endorseForm');
-        const submitButton = endorseForm.querySelector('button[type="submit"]');
 
-        endorseForm.addEventListener('submit', function () {
-            // Disable the submit button to prevent duplicates
-            submitButton.disabled = true;
-            submitButton.textContent = 'Submitting...';
-        });
-    });
-</script>
+
 
 
 
@@ -494,6 +451,68 @@ $(document).on('click', '#analyzeButton', function () {
                     }
                 }
             });
+        });
+    });
+</script>
+
+
+
+
+<!-- disable endorse button to avoid duplicates -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const form = document.getElementById('endorseForm');
+        const submitButton = document.getElementById('submitEndorsement'); // The form submit button
+
+        form.addEventListener('submit', function () {
+            // Disable the "Endorse" button
+            const postId = document.getElementById('post_id').value;
+            const endorseButton = document.getElementById('endorseButton' + postId);
+            if (endorseButton) {
+                endorseButton.disabled = true; // Disable the Endorse button
+                endorseButton.textContent = 'Endorsed'; // Optionally change the button text
+            }
+
+            // Disable the submit button (optional)
+            submitButton.disabled = true;
+            submitButton.textContent = 'Submitting...';
+        });
+    });
+</script>
+
+<script>
+    $('#endorseModal').on('show.bs.modal', function (e) {
+        var button = $(e.relatedTarget); // Button that triggered the modal
+        var postId = button.data('id'); // Extract info from data-* attributes
+        var branchId = button.data('branch');
+        
+        // Set the post_id field to the selected post ID
+        $(this).find('#post_id').val(postId);
+    });
+</script>
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const endorseButton = document.getElementById('endorseButton'); // Target the endorse button
+        const submitButton = document.getElementById('submitEndorsement'); // Target the submit button inside the modal
+
+        // Disable the endorse button if already endorsed or resolved
+        if (endorseButton.getAttribute('data-endorsed') === 'true') {
+            endorseButton.disabled = true;
+            endorseButton.classList.add('disabled'); // Optional: Add disabled styling
+            endorseButton.textContent = 'Already Endorsed/Resolved'; // Update text for disabled state
+        }
+
+        // Handle form submission from modal
+        submitButton.closest('form').addEventListener('submit', function () {
+            // Disable the endorse button after form is submitted
+            endorseButton.disabled = true;
+            endorseButton.classList.add('disabled'); // Add 'disabled' class for styling
+            endorseButton.textContent = 'Already Endorsed'; // Change button text to indicate endorsement
+
+            // Update the data-endorsed attribute to true
+            endorseButton.setAttribute('data-endorsed', 'true');
         });
     });
 </script>
