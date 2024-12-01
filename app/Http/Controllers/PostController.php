@@ -49,19 +49,33 @@ class PostController extends Controller
     public function update(Request $request)
     {
 
-        $data = $request->validate([
-            'post_id' => 'required|integer',
-            'endorse_to' => 'required|string',
-            'endorse_by' => 'required|integer', // Authenticated user's ID
-        ]);
+        // $data = $request->validate([
+        //     'post_id' => 'required|integer',
+        //     'endorse_to' => 'required|string',
+        //     'endorse_by' => 'required|integer', // Authenticated user's ID
+        // ]);
 
-        // Assuming you have a `Post` model and the `id` to be updated
-        $post = Post::findOrFail($data['post_id']);
-        $post->endorse_to = $data['endorse_to'];
-        //dd($post);
-        $post->endorse_by = $data['endorse_by']; // Store the user who prepared the endorsement
-        $post->status = 'Pending'; // Set status to "Pending"
-        $post->save();
+        // // Assuming you have a `Post` model and the `id` to be updated
+        // $post = Post::findOrFail($data['post_id']);
+        // $post->endorse_to = $data['endorse_to'];
+        // //dd($post);
+        // $post->endorse_by = $data['endorse_by']; // Store the user who prepared the endorsement
+        // $post->status = 'Pending'; // Set status to "Pending"
+        // $post->save();
+
+
+        $validated = $request->validate([
+            'post_id' => 'required|exists:posts,id',
+            'endorse_by' => 'required|exists:users,id',
+            'endorse_to' => 'required|exists:users,id',
+        ]);
+    
+        $post = Post::find($validated['post_id']);
+        $post->update([
+            'status' => 'Endorsed', // Mark as endorsed
+            'endorse_by' => $validated['endorse_by'],
+            'endorse_to' => $validated['endorse_to'],
+        ]);
 
         return redirect()->route('posts.index')->with('success', '<span style="color: red;">Concern Successfully Endorsed</span>');
     }

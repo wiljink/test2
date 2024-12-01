@@ -235,9 +235,11 @@
             @else
                 <td>
                     <!-- Add actions for non-account_type_id == 7 -->
-                    <a href="#" id="endorseButton" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#endorseModal" 
+                    <a href="#" id="endorseButton" class="btn btn-primary @if($posts->status == 'Endorsed' || $posts->status == 'Resolved') disabled @endif"
+   data-bs-toggle="modal" data-bs-target="#endorseModal" 
    data-id="{{ $posts->id }}" data-branch="{{ $posts->branch }}"
-   data-endorsed="{{ $posts->status == 'Endorsed' || $posts->status == 'Resolved' ? 'true' : 'false' }}">
+   data-endorsed="{{ $posts->status == 'Endorsed' || $posts->status == 'Resolved' ? 'true' : 'false' }}"
+   @if($posts->status == 'Endorsed' || $posts->status == 'Resolved') disabled @endif>
     ENDORSE
 </a>
 
@@ -281,7 +283,6 @@
                         <input type="text" name="endorse_by" id="endorse_by" value="{{ $authenticatedUser['id'] }}">
                         @endif
 
-                        <!-- Endorse To - Select Dropdown -->
                       <!-- Endorse To - Select Dropdown -->
 <div class="mb-3">
     <label for="endorseTo" class="form-label">Endorse To</label>
@@ -378,6 +379,7 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
 
 
+<!-- analyzemodalform -->
 <script>
 
 $(document).on('click', '#analyzeButton', function () {
@@ -396,6 +398,7 @@ $(document).on('click', '#analyzeButton', function () {
 
 </script>
 
+<!-- add task and less task -->
 <script>
     $(document).ready(function() {
         // Add Task functionality
@@ -426,7 +429,7 @@ $(document).on('click', '#analyzeButton', function () {
 
 
 
-    <script>
+ <script>
     document.addEventListener('DOMContentLoaded', function () {
         const endorseButtons = document.querySelectorAll('#endorseButton');
         const endorseModal = document.getElementById('endorseModal');
@@ -489,9 +492,9 @@ $(document).on('click', '#analyzeButton', function () {
         // Set the post_id field to the selected post ID
         $(this).find('#post_id').val(postId);
     });
-</script>
+</script> -->
 
-
+<!-- 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const endorseButton = document.getElementById('endorseButton'); // Target the endorse button
@@ -515,7 +518,51 @@ $(document).on('click', '#analyzeButton', function () {
             endorseButton.setAttribute('data-endorsed', 'true');
         });
     });
+</script> -->
+
+<!-- //newly added -->
+<script>
+// document.addEventListener('DOMContentLoaded', function () {
+//     const endorseForm = document.querySelector('#endorseForm');
+
+//     endorseForm.addEventListener('submit', function (e) {
+//         // Get the post ID from the hidden input field in the form
+//         const postId = document.querySelector('#post_id').value;
+
+//         // Find the button with the matching data-id
+//         const endorseButton = document.querySelector(`a#endorseButton[data-id="${postId}"]`);
+
+//         // Disable the button
+//         if (endorseButton) {
+//             endorseButton.classList.add('disabled'); // Optional: Add a Bootstrap disabled style
+//             endorseButton.setAttribute('disabled', 'true');
+//         }
+//     });
+// });
+
+document.addEventListener('DOMContentLoaded', function () {
+    const endorseForm = document.querySelector('#endorseForm');
+    const endorseButton = document.querySelectorAll('#endorseButton');
+
+    endorseForm.addEventListener('submit', function (e) {
+        // Get the post ID from the modal's hidden input
+        const postId = document.querySelector('#post_id').value;
+
+        // Find the corresponding Endorse button and disable it
+        endorseButton.forEach(button => {
+            if (button.dataset.id === postId) {
+                button.disabled = true;
+                button.classList.add('disabled'); // Add a CSS class for visual feedback
+            }
+        });
+
+        // Allow form submission to proceed
+    });
+});
+
+
 </script>
+
 
 
 
