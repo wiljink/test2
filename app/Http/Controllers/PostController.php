@@ -115,14 +115,14 @@ class PostController extends Controller
     
         return redirect()->route('posts.index')->with('success', 'Post analyzed successfully!');
     }
-    public function resolveConcern($id)
-{
-    $post = Post::findOrFail($id);
+//     public function resolveConcern($id)
+// {
+//     $post = Post::findOrFail($id);
 
-    // Mark the concern as resolved
-    $post->status = 'Resolved';
-    $post->save();
+//     // Mark the concern as resolved
+//     $post->status = 'Resolved';
+//     $post->save();
 
-    return redirect()->back()->with('success', 'Concern resolved successfully!');
-}
+//     return redirect()->back()->with('success', 'Concern resolved successfully!');
+// }
 }

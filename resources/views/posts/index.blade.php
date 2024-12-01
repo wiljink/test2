@@ -226,7 +226,7 @@
                 <td>{{ $posts->status ?? 'Pending' }}</td>
                 <td>
                 <a href="#" id="analyzeButton" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#analyzeModal" data-id="{{ $posts->id }}"
-                data-name="{{ $posts->name }}" data-branch="{{ $posts->branch}}" data-contact="{{ $posts->contact_number }}">
+                data-name="{{ $posts->name }}" data-branch="{{ $posts->branch}}" data-contact="{{ $posts->contact_number }}" data-message="{{ $posts->message }}">
                 ANALYZE
                 </a>
 
@@ -242,8 +242,6 @@
    @if($posts->status == 'Endorsed' || $posts->status == 'Resolved') disabled @endif>
     ENDORSE
 </a>
-
-
                 </td>
             @endif
         </tr>
@@ -323,12 +321,12 @@
                         @method('put')
 
                        <!-- Hidden input for the post ID -->
-                       <input type="text" name="posts_id" id="posts_id" value="">
+                       <input type="hidden" name="posts_id" id="posts_id" value="">
 
 
                          <!-- Prepared By - Hidden Field for Authenticated User -->
                          @if($authenticatedUser)
-                        <input type="text" name="endorse_by" id="endorse_by" value="{{ $authenticatedUser['id'] }}">
+                        <input type="hidden" name="endorse_by" id="endorse_by" value="{{ $authenticatedUser['id'] }}">
                         @endif
 
                         <!-- Display Name -->
@@ -347,6 +345,12 @@
                         <div class="mb-3">
                             <label for="analyzeContact" class="form-label">Contact Number</label>
                             <input type="text" class="form-control" name="contact_number" id="analyzeContact" readonly>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="analyzeMessage" class="form-label">Message</label>
+                            <textarea class="form-control" name="message" id="analyzeMessage" rows="3" readonly></textarea>
+
                         </div>
 
                         <!-- Tasks Section -->
@@ -387,6 +391,7 @@ $(document).on('click', '#analyzeButton', function () {
     const postName = $(this).data('name');
     const postBranch = $(this).data('branch');
     const postContact = $(this).data('contact');
+    const postMessage = $(this).data('message');
 
 
 
@@ -394,6 +399,7 @@ $(document).on('click', '#analyzeButton', function () {
     $('#analyzePostName').val(postName);
     $('#analyzeBranch').val(postBranch || '');
     $('#analyzeContact').val(postContact || '');
+    $('#analyzeMessage').val(postMessage || '');
 });
 
 </script>
@@ -494,51 +500,11 @@ $(document).on('click', '#analyzeButton', function () {
     });
 </script> -->
 
-<!-- 
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const endorseButton = document.getElementById('endorseButton'); // Target the endorse button
-        const submitButton = document.getElementById('submitEndorsement'); // Target the submit button inside the modal
 
-        // Disable the endorse button if already endorsed or resolved
-        if (endorseButton.getAttribute('data-endorsed') === 'true') {
-            endorseButton.disabled = true;
-            endorseButton.classList.add('disabled'); // Optional: Add disabled styling
-            endorseButton.textContent = 'Already Endorsed/Resolved'; // Update text for disabled state
-        }
-
-        // Handle form submission from modal
-        submitButton.closest('form').addEventListener('submit', function () {
-            // Disable the endorse button after form is submitted
-            endorseButton.disabled = true;
-            endorseButton.classList.add('disabled'); // Add 'disabled' class for styling
-            endorseButton.textContent = 'Already Endorsed'; // Change button text to indicate endorsement
-
-            // Update the data-endorsed attribute to true
-            endorseButton.setAttribute('data-endorsed', 'true');
-        });
-    });
-</script> -->
 
 <!-- //newly added -->
 <script>
-// document.addEventListener('DOMContentLoaded', function () {
-//     const endorseForm = document.querySelector('#endorseForm');
 
-//     endorseForm.addEventListener('submit', function (e) {
-//         // Get the post ID from the hidden input field in the form
-//         const postId = document.querySelector('#post_id').value;
-
-//         // Find the button with the matching data-id
-//         const endorseButton = document.querySelector(`a#endorseButton[data-id="${postId}"]`);
-
-//         // Disable the button
-//         if (endorseButton) {
-//             endorseButton.classList.add('disabled'); // Optional: Add a Bootstrap disabled style
-//             endorseButton.setAttribute('disabled', 'true');
-//         }
-//     });
-// });
 
 document.addEventListener('DOMContentLoaded', function () {
     const endorseForm = document.querySelector('#endorseForm');
