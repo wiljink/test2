@@ -49,36 +49,34 @@ class PostController extends Controller
     public function update(Request $request)
     {
 
-        // $data = $request->validate([
-        //     'post_id' => 'required|integer',
-        //     'endorse_to' => 'required|string',
-        //     'endorse_by' => 'required|integer', // Authenticated user's ID
-        // ]);
-
-        // // Assuming you have a `Post` model and the `id` to be updated
-        // $post = Post::findOrFail($data['post_id']);
-        // $post->endorse_to = $data['endorse_to'];
-        // //dd($post);
-        // $post->endorse_by = $data['endorse_by']; // Store the user who prepared the endorsement
-        // $post->status = 'Pending'; // Set status to "Pending"
-        // $post->save();
-
-
-        $validated = $request->validate([
-            'post_id' => 'required|exists:posts,id',
-            'endorse_by' => 'required|exists:users,id',
-            'endorse_to' => 'required|exists:users,id',
-        ]);
+            // Validate the incoming request data
+            $data = $request->validate([
+                'post_id' => 'required|integer',
+                'endorse_to' => 'required|string',
+                'endorse_by' => 'required|integer', // Authenticated user's ID
+            ]);
+            
+            // Find the post by its ID
+            $post = Post::findOrFail($data['post_id']);
+            
+            // Update the post with the validated data
+            $post->endorse_to = $data['endorse_to'];
+            $post->endorse_by = $data['endorse_by']; // Store the user who prepared the endorsement
+            $post->status = 'Endorsed'; // Set status to "Pending"
+            $post->save();
+        
+            // Return a success response with the post ID
+            return response()->json([
+                'success' => true,
+                'post_id' => $post->id,  // Include the post_id for the frontend to use
+            ]);
     
-        $post = Post::find($validated['post_id']);
-        $post->update([
-            'status' => 'Endorsed', // Mark as endorsed
-            'endorse_by' => $validated['endorse_by'],
-            'endorse_to' => $validated['endorse_to'],
-        ]);
+        
 
-        return redirect()->route('posts.index')->with('success', '<span style="color: red;">Concern Successfully Endorsed</span>');
-    }
+
+        //return redirect()->route('posts.index')->with('success', '<span style="color: red;">Concern Successfully Endorsed</span>');
+        }
+    
 
     public function index(Request $request)
     {
@@ -107,14 +105,30 @@ class PostController extends Controller
 
     public function analyze(Request $request)
     {
-        $post = Post::findOrFail($request->posts_id); // Use the ID passed in the URL
-        $post->tasks = json_encode($request->input('tasks'));
-        $post->endorse_by = $request->input('endorse_by');
+        $post = Post::find($request->posts_id);
+    if ($post) {
         $post->status = 'Resolved';
+        $post->tasks = json_encode($request->input('tasks')); // Save tasks/actions
+        //$post->archived_at = now(); // Mark as archived
         $post->save();
-    
-        return redirect()->route('posts.index')->with('success', 'Post analyzed successfully!');
+
+        // Return JSON response with success status and post_id
+        return response()->json([
+            'success' => true,
+            'post_id' => $post->id,  // Include the post_id for the frontend to use
+        ]);
     }
+
+    // If the post is not found, return a failure response
+    return response()->json([
+        'success' => false,
+        'message' => 'Post not found.',
+    ]);
+    
+
+   
+        // return redirect()->route('posts.index')->with('success', 'Post analyzed successfully!');
+ }
 //     public function resolveConcern($id)
 // {
 //     $post = Post::findOrFail($id);

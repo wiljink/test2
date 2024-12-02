@@ -127,7 +127,7 @@
                 </div>
                 
                 <div>
-                    <label for="exampleFormControlTextarea1" class="form-label">Message:(E-detelye imung mensahe)</label>
+                    <label for="exampleFormControlTextarea1" class="form-label">Message:(E-detalye imung Concern)</label>
                     <textarea class="form-control" id="exampleFormControlTextarea1" rows="3" name="message"></textarea>
                 </div>
             </div>

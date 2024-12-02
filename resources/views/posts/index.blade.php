@@ -9,6 +9,14 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
 
     <style>
+        a.disabled {
+            pointer-events: none;
+            color: grey;
+            cursor: not-allowed;
+        }
+    </style>
+
+    <style>
         /* Custom styles */
         .custom-container {
             background-color: #004d00;
@@ -135,15 +143,11 @@
                     <li class="nav-item">
                         <a class="nav-link text-white" href="#">Member Concerns</a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-white" href="#">Branch Managers</a>
-                    </li>
+                   
                     <li class="nav-item">
                         <a class="nav-link text-white" href="#">Reports</a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-white" href="#">Settings</a>
-                    </li>
+                
                     <!-- Logout Button -->
                     <li class="nav-item">
                         <form action="{{ route('logout') }}" method="post" class="d-inline">
@@ -171,7 +175,6 @@
         @endif
     </div>
 
-    <!-- Your existing content remains unchanged -->
 </body>
 
 
@@ -203,28 +206,32 @@
         </tr>
     </thead>
     <tbody>
-        @foreach($data as $posts)
-        <tr>
-            <td>{{ $posts->id }}</td>
-            <td>{{ $posts->name }}</td>
+    @foreach($data as $posts)
+    <!-- Exclude Resolved Rows -->
+    @if($posts->status !== 'Resolved')
+    <tr>
+        <!-- Post Data -->
+        <td>{{ $posts->id }}</td>
+        <td>{{ $posts->name }}</td>
+        <td>
             @foreach($branches as $branch)
                 @if($posts->branch == $branch['id'])
-                    <td>{{ $branch['branch_name'] }}</td>
+                    {{ $branch['branch_name'] }}
                 @endif
             @endforeach
-            <td>{{ $posts->contact_number }}</td>
-            <td>{{ $posts->created_at->format('Y-m-d') }}</td>
-            <td>{{ $posts->concern }}</td>
-            <td>{{ $posts->message }}</td>
+        </td>
+        <td>{{ $posts->contact_number }}</td>
+        <td>{{ $posts->created_at->format('Y-m-d') }}</td>
+        <td>{{ $posts->concern }}</td>
+        <td>{{ $posts->message }}</td>
 
-            @if($authenticatedUser['account_type_id'] == 7)
-        
-            <td>{{ $posts->endorse_by ?? 'N/A' }}</td>
-
-                <td>{{ $posts->tasks }}</td>
-                <td>{{ $posts->days_resolved ?? 'N/A' }}</td>
-                <td>{{ $posts->status ?? 'Pending' }}</td>
-                <td>
+        <!-- Conditional Columns Based on Account Type -->
+        @if($authenticatedUser['account_type_id'] == 7)
+        <td>{{ $posts->endorse_by ?? 'N/A' }}</td>
+        <td>{{ $posts->tasks }}</td>
+        <td>{{ $posts->days_resolved ?? 'N/A' }}</td>
+        <td>{{ $posts->status ?? 'Pending' }}</td>
+        <td>
                 <a href="#" id="analyzeButton" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#analyzeModal" data-id="{{ $posts->id }}"
                 data-name="{{ $posts->name }}" data-branch="{{ $posts->branch}}" data-contact="{{ $posts->contact_number }}" data-message="{{ $posts->message }}">
                 ANALYZE
@@ -234,17 +241,26 @@
 
             @else
                 <td>
-                    <!-- Add actions for non-account_type_id == 7 -->
-                    <a href="#" id="endorseButton" class="btn btn-primary @if($posts->status == 'Endorsed' || $posts->status == 'Resolved') disabled @endif"
-   data-bs-toggle="modal" data-bs-target="#endorseModal" 
-   data-id="{{ $posts->id }}" data-branch="{{ $posts->branch }}"
-   data-endorsed="{{ $posts->status == 'Endorsed' || $posts->status == 'Resolved' ? 'true' : 'false' }}"
-   @if($posts->status == 'Endorsed' || $posts->status == 'Resolved') disabled @endif>
-    ENDORSE
-</a>
+              
+                @if($posts->status === 'Resolved')
+                    <!-- Do not render Endorse button for resolved concerns -->
+                @else
+                    <a href="#" 
+                       id="endorseButton" 
+                       class="btn btn-primary @if($posts->status === 'Endorsed') disabled @endif"
+                       data-bs-toggle="modal" 
+                       data-bs-target="#endorseModal" 
+                       data-id="{{ $posts->id }}" 
+                       data-branch="{{ $posts->branch }}" 
+                       data-branch-manager-id="{{ optional($posts->branch_manager)->id }}">
+                        ENDORSE
+                    </a>
+                    @endif
+
                 </td>
             @endif
         </tr>
+        @endif
         @endforeach
     </tbody>
 </table>
@@ -262,27 +278,27 @@
 
     <!-- Modal Form for HO staff -->
     <div class="modal fade" id="endorseModal" tabindex="-1" aria-labelledby="endorseModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="endorseModalLabel">Endorse Concern</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="endorseForm" action="{{ route('posts.update') }}" method="POST">
-                        @csrf
-                        @method('put')
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="endorseModalLabel">Endorse Concern</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="endorseForm" action="{{ route('posts.update') }}" method="POST">
+                    @csrf
+                    @method('put')
 
-                        <!-- Hidden input for the post ID -->
-                        <input type="text" name="post_id" id="post_id">
+                    <!-- Hidden input for the post ID -->
+                    <input type="text" name="post_id" id="post_id">
 
-                        <!-- Prepared By - Hidden Field for Authenticated User -->
-                        @if($authenticatedUser)
+                    <!-- Prepared By - Hidden Field for Authenticated User -->
+                    @if($authenticatedUser)
                         <input type="text" name="endorse_by" id="endorse_by" value="{{ $authenticatedUser['id'] }}">
-                        @endif
+                    @endif
 
-                      <!-- Endorse To - Select Dropdown -->
-<div class="mb-3">
+                    <!-- Endorse To - Select Dropdown -->
+                    <div class="mb-3">
     <label for="endorseTo" class="form-label">Endorse To</label>
     <select class="form-select" id="endorseTo" name="endorse_to" required>
         <option value="" selected disabled>Select Branch Manager</option>
@@ -296,14 +312,13 @@
 </div>
 
 
-
-                        <!-- Submit Button -->
-                        <button type="submit" class="btn btn-success" id="submitEndorsement">Submit Endorsement</button>
-                    </form>
-                </div>
+                    <!-- Submit Button -->
+                    <button type="submit" class="btn btn-success" id="submitEndorsement">Submit Endorsement</button>
+                </form>
             </div>
         </div>
     </div>
+</div>
 
 
     <!-- modal form for Branch Managers -->
@@ -402,6 +417,60 @@ $(document).on('click', '#analyzeButton', function () {
     $('#analyzeMessage').val(postMessage || '');
 });
 
+
+// document.addEventListener('DOMContentLoaded', function () {
+//     $('#analyzeForm').on('show.bs.modal', function (event) {
+//         const button = event.relatedTarget;
+//         const postId = button.getAttribute('id');
+//         const postName = button.getAttribute('name');
+//         const postBranch = button.getAttribute('branch');
+//         const postContact = button.getAttribute('contact');
+//         const postMessage = button.getAttribute('message');
+
+//         // Populate the modal form fields
+//         $('#posts_id').val(postId);
+//         $('#analyzePostName').val(postName);
+//         $('#analyzeBranch').val(postBranch);
+//         $('#analyzeContact').val(postContact);
+//         $('#analyzeMessage').val(postMessage);
+//     });
+// });
+
+
+</script>
+<!-- newly added code -->
+<script>
+ $('#analyzeForm').on('submit', function (event) {
+    event.preventDefault();  // Prevent form submission
+
+    const formData = $(this).serialize();  // Serialize form data
+
+    $.ajax({
+        type: 'POST',
+        url: $(this).attr('action'),  // Ensure the form action URL is correctly set
+        data: formData,
+        success: function (response) {
+            // Check if the response indicates success
+            if (response.success) {
+                // Remove the row corresponding to the resolved concern
+                $(`a[data-id="${response.post_id}"]`).closest('tr').remove();
+
+                // Hide the modal
+                $('#analyzeModal').modal('hide');
+
+                // Redirect to posts.index page after success
+                window.location.href = '{{ route('posts.index') }}';  // Laravel route to posts.index
+            } else {
+                alert('Post not found or an error occurred: ' + response.message);
+            }
+        },
+        error: function () {
+            alert('An error occurred while resolving the concern.');
+        }
+    });
+});
+
+
 </script>
 
 <!-- add task and less task -->
@@ -430,79 +499,51 @@ $(document).on('click', '#analyzeButton', function () {
 </script>
 
 
-
-
-
-
-
- <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const endorseButtons = document.querySelectorAll('#endorseButton');
-        const endorseModal = document.getElementById('endorseModal');
-        const postInput = document.getElementById('post_id');
-        const endorseToDropdown = document.getElementById('endorseTo');
-
-        endorseButtons.forEach(button => {
-            button.addEventListener('click', function () {
-                // Get post data from the button
-                const postId = this.getAttribute('data-id');
-                const branchId = this.getAttribute('data-branch');
-
-                // Set the post_id in the form
-                postInput.value = postId;
-
-                // Pre-select the branch manager based on branch_id
-                const options = endorseToDropdown.options;
-                for (let i = 0; i < options.length; i++) {
-                    if (options[i].getAttribute('data-branch-id') === branchId) {
-                        options[i].selected = true;
-                        break;
-                    }
-                }
-            });
-        });
-    });
-</script>
-
-
-
-
 <!-- disable endorse button to avoid duplicates -->
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const form = document.getElementById('endorseForm');
-        const submitButton = document.getElementById('submitEndorsement'); // The form submit button
+  $('#endorseForm').on('submit', function (event) {
+    event.preventDefault(); // Prevent default form submission
 
-        form.addEventListener('submit', function () {
-            // Disable the "Endorse" button
-            const postId = document.getElementById('post_id').value;
-            const endorseButton = document.getElementById('endorseButton' + postId);
-            if (endorseButton) {
-                endorseButton.disabled = true; // Disable the Endorse button
-                endorseButton.textContent = 'Endorsed'; // Optionally change the button text
+    const formData = $(this).serialize(); // Serialize the form data
+    const endorseButton = $('#endorseButton'); // Assuming the button has this ID
+
+    // Disable the button immediately after form submission
+    endorseButton.addClass('disabled').attr('disabled', true).text('Endorsed');
+
+    $.ajax({
+        type: 'POST',
+        url: $(this).attr('action'), // Form action URL
+        data: formData,
+        success: function (response) {
+            // Check if the response indicates success
+            if (response.success) {
+                // Hide the modal and update the button state
+                $('#endorseModal').modal('hide');
+
+                // Update the button to show "Endorsed" status on the page
+                endorseButton.text('Endorsed').attr('disabled', true).addClass('disabled');
+
+                // Redirect to the posts.index page after success
+                window.location.href = '{{ route('posts.index') }}';  // Redirect to index page
+            } else {
+                alert('An error occurred: ' + response.message);
+                // Re-enable the button if there was an error
+                endorseButton.removeClass('disabled').attr('disabled', false).text('Endorse');
             }
-
-            // Disable the submit button (optional)
-            submitButton.disabled = true;
-            submitButton.textContent = 'Submitting...';
-        });
+        },
+        error: function () {
+            alert('An error occurred while submitting the endorsement.');
+            // Re-enable the button if there was an error
+            endorseButton.removeClass('disabled').attr('disabled', false).text('Endorse');
+        }
     });
+});
+
+
+
 </script>
 
-<script>
-    $('#endorseModal').on('show.bs.modal', function (e) {
-        var button = $(e.relatedTarget); // Button that triggered the modal
-        var postId = button.data('id'); // Extract info from data-* attributes
-        var branchId = button.data('branch');
-        
-        // Set the post_id field to the selected post ID
-        $(this).find('#post_id').val(postId);
-    });
-</script> -->
 
-
-
-<!-- //newly added -->
 <script>
 
 
@@ -529,6 +570,36 @@ document.addEventListener('DOMContentLoaded', function () {
 
 </script>
 
+
+<!-- populate endorse to select value with their corresponding branch manager -->
+<script>
+
+document.addEventListener('DOMContentLoaded', function () {
+    $('#endorseModal').on('show.bs.modal', function (event) {
+        var button = event.relatedTarget; // Button that triggered the modal
+        var postId = button.getAttribute('data-id'); // Extract the post ID
+        var branchId = button.getAttribute('data-branch'); // Extract the branch ID
+
+        // Populate the hidden input with the post ID
+        document.getElementById('post_id').value = postId;
+
+        // Pre-select the branch manager in the dropdown
+        var endorseToSelect = document.getElementById('endorseTo');
+        for (let i = 0; i < endorseToSelect.options.length; i++) {
+            const option = endorseToSelect.options[i];
+            if (option.getAttribute('data-branch-id') === branchId) {
+                option.selected = true;
+                break;
+            }
+        }
+    });
+});
+
+
+
+
+
+</script>
 
 
 
