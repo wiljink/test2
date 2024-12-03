@@ -158,11 +158,13 @@ public function resolved()
     // Retrieve all resolved posts (or you can filter based on specific criteria)
     $posts = Post::whereNotNull('resolved_days')->get();
 
+
     $totalSeconds = 0;
     $totalPosts = count($posts);
 
     // Loop through each post and calculate its resolved time in seconds
     foreach ($posts as $post) {
+
         // Decode the resolved_days JSON (to get days, hours, minutes, seconds)
         $resolvedTime = json_decode($post->resolved_days, true);
 
@@ -187,6 +189,7 @@ public function resolved()
     $averageMinutes = floor($averageSeconds / 60);   // Convert to minutes
     $averageSeconds %= 60;                           // Get the remaining seconds
 
+    // dd($averageDays);
 
     $average = [
         'days' => $averageDays,
@@ -194,6 +197,7 @@ public function resolved()
         'minutes' => $averageMinutes,
         'seconds' => $averageSeconds
     ];
+
 
     // Redirect to the resolved concerns page with the success message
     return view('posts.resolved', compact('posts', 'average'));

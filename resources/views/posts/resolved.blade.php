@@ -1,6 +1,4 @@
-@extends('layouts.app')
 
-@section('content')
     <div class="container">
         <h1>Resolved Concerns</h1>
 
@@ -20,18 +18,17 @@
                 <tbody>
                     @foreach($posts as $post)
                         @php
-                            $average = json_decode($post->resolved_days, true);
-                            dd($average);
+                            $resolvedTime = json_decode($post->resolved_days, true);
                         @endphp
                         <tr>
                             <td>{{ $post->id }}</td>
                             <td>{{ \Carbon\Carbon::parse($post->resolved_date)->format('Y-m-d H:i:s') }}</td>
                             <td>
-                                @if($average)
-                                    {{ $average['Days'] ?? 0 }} Days, 
-                                    {{ $average['Hours'] ?? 0 }} Hours, 
-                                    {{ $average['Minutes'] ?? 0 }} Minutes, 
-                                    {{ $average['Seconds'] ?? 0 }} Seconds
+                                @if($resolvedTime)
+                                    {{ $resolvedTime['Days'] ?? 0 }} Days,
+                                    {{ $resolvedTime['Hours'] ?? 0 }} Hours, 
+                                    {{ $resolvedTime['Minutes'] ?? 0 }} Minutes, 
+                                    {{ $resolvedTime['Seconds'] ?? 0 }} Seconds
                                 @else
                                     No resolution time available
                                 @endif
@@ -41,13 +38,16 @@
                 </tbody>
             </table>
 
-            <h3>Average Resolution Time</h3>
-            <p>
-                <strong>{{ $average['days'] }} Days, </strong>
-                <strong>{{ $average['hours'] }} Hours, </strong>
-                <strong>{{ $average['minutes'] }} Minutes, </strong>
-                <strong>{{ $average['seconds'] }} Seconds</strong>
-            </p>
+            @if(isset($average))
+                <h3>Average Resolution Time</h3>
+                <p>
+                    <strong>{{ $average['days'] ?? 0 }} Days, </strong>
+                    <strong>{{ $average['hours'] ?? 0 }} Hours, </strong>
+                    <strong>{{ $average['minutes'] ?? 0 }} Minutes, </strong>
+                    <strong>{{ $average['seconds'] ?? 0 }} Seconds</strong>
+                </p>
+            @else
+                <p>No average resolution time available.</p>
+            @endif
         @endif
     </div>
-@endsection
