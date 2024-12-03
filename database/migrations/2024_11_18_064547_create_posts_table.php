@@ -21,6 +21,10 @@ return new class extends Migration
             $table->string('endorse_by')->nullable();  // Make 'endorse_by' nullable
             $table->string('endorse_to')->nullable();  // Make 'endorse_to' nullable
             $table->string('status')->nullable()->default('pending');      // Make 'status' nullable
+            $table->json('tasks')->nullable();
+            $table->timestamp('endorsed_date')->nullable();  // Add 'endorsed_date' column
+            $table->timestamp('resolved_date')->nullable();  // Add 'resolved_date' column
+            $table->json('resolved_days')->nullable();
             $table->timestamps();
         });
         

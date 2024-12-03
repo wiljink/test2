@@ -134,30 +134,50 @@
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
-            <!-- Navigation Menu -->
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link text-white" href="#">Home</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-white" href="#">Member Concerns</a>
-                    </li>
-                   
-                    <li class="nav-item">
-                        <a class="nav-link text-white" href="#">Reports</a>
-                    </li>
-                
-                    <!-- Logout Button -->
-                    <li class="nav-item">
-                        <form action="{{ route('logout') }}" method="post" class="d-inline">
-                            @csrf
-                            @method('post')
-                            <button type="submit" class="nav-link btn btn-link text-white p-0 m-0" style="text-decoration: none;">Logout</button>
-                        </form>
-                    </li>
-                </ul>
-            </div>
+           <!-- Navigation Menu -->
+           <div class="collapse navbar-collapse" id="navbarNav">
+    <ul class="navbar-nav ms-auto">
+        <!-- Common Home Menu Item (Visible for all) -->
+        <li class="nav-item">
+            <a class="nav-link text-white" href="#">Home</a>
+        </li>
+
+        @if($authenticatedUser['account_type_id'] != 7)
+            <!-- Members Concerns (Only for non-admin users) -->
+            <li class="nav-item">
+                <a class="nav-link text-white" href="#">Members Concerns</a>
+            </li>
+        @endif
+
+        @if($authenticatedUser['account_type_id'] == 7)
+            <!-- Endorsed Concerns (Only for users with account_type_id == 7) -->
+            <li class="nav-item">
+                <a class="nav-link text-white" href="#">Endorsed Concerns</a>
+            </li>
+        @endif
+
+        <!-- Resolved Concerns (Visible for all) -->
+        <li class="nav-item">
+            <a class="nav-link text-white" href="#">Resolved Concerns</a>
+        </li>
+
+        <!-- Reports (Visible for all) -->
+        <li class="nav-item">
+            <a class="nav-link text-white" href="#">Reports</a>
+        </li>
+
+        <!-- Logout Button (Visible for all users) -->
+        <li class="nav-item">
+            <form action="{{ route('logout') }}" method="post" class="d-inline">
+                @csrf
+                @method('post')
+                <button type="submit" class="nav-link btn btn-link text-white p-0 m-0" style="text-decoration: none;">Logout</button>
+            </form>
+        </li>
+    </ul>
+</div>
+
+
         </div>
     </nav>
 
@@ -198,6 +218,7 @@
             <th scope="col">PREPARED BY</th>
                 <th scope="col">TASK</th>
                 <th scope="col">DAYS RESOLVED</th>
+                <th scope="col">DATE RESOLVED</th>
                 <th scope="col">STATUS</th>
                 <th scope="col">ACTION</th> 
             @else
@@ -229,7 +250,21 @@
         @if($authenticatedUser['account_type_id'] == 7)
         <td>{{ $posts->endorse_by ?? 'N/A' }}</td>
         <td>{{ $posts->tasks }}</td>
-        <td>{{ $posts->days_resolved ?? 'N/A' }}</td>
+                
+                    <td>
+                @if ($posts->resolved_days)
+                    {{ $posts->resolved_days['days_resolved'] }} days
+                @else
+                    N/A
+                @endif
+            </td>
+            <td>
+                @if ($posts->resolved_days)
+                    {{ $posts->resolved_days['resolved_date'] }}
+                @else
+                    N/A
+                @endif
+            </td>
         <td>{{ $posts->status ?? 'Pending' }}</td>
         <td>
                 <a href="#" id="analyzeButton" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#analyzeModal" data-id="{{ $posts->id }}"
@@ -298,7 +333,7 @@
                     @endif
 
                     <!-- Endorse To - Select Dropdown -->
-                    <div class="mb-3">
+<div class="mb-3">
     <label for="endorseTo" class="form-label">Endorse To</label>
     <select class="form-select" id="endorseTo" name="endorse_to" required>
         <option value="" selected disabled>Select Branch Manager</option>
@@ -310,6 +345,8 @@
         @endforeach
     </select>
 </div>
+
+                <input type="hidden" id="endorsedDate" name="endorsed_date">
 
 
                     <!-- Submit Button -->
@@ -368,6 +405,8 @@
 
                         </div>
 
+                        <!-- Hidden Resolved Date -->
+
                         <!-- Tasks Section -->
                         <div class="mb-3">
                             <label class="form-label">Action Taken</label>
@@ -407,6 +446,7 @@ $(document).on('click', '#analyzeButton', function () {
     const postBranch = $(this).data('branch');
     const postContact = $(this).data('contact');
     const postMessage = $(this).data('message');
+    const postResolvedDate = $(this).data('resolved_date');
 
 
 
@@ -415,63 +455,13 @@ $(document).on('click', '#analyzeButton', function () {
     $('#analyzeBranch').val(postBranch || '');
     $('#analyzeContact').val(postContact || '');
     $('#analyzeMessage').val(postMessage || '');
+    $('#analyzeResolvedDate').val(postResolvedDate || '');
 });
 
 
-// document.addEventListener('DOMContentLoaded', function () {
-//     $('#analyzeForm').on('show.bs.modal', function (event) {
-//         const button = event.relatedTarget;
-//         const postId = button.getAttribute('id');
-//         const postName = button.getAttribute('name');
-//         const postBranch = button.getAttribute('branch');
-//         const postContact = button.getAttribute('contact');
-//         const postMessage = button.getAttribute('message');
-
-//         // Populate the modal form fields
-//         $('#posts_id').val(postId);
-//         $('#analyzePostName').val(postName);
-//         $('#analyzeBranch').val(postBranch);
-//         $('#analyzeContact').val(postContact);
-//         $('#analyzeMessage').val(postMessage);
-//     });
-// });
-
 
 </script>
-<!-- newly added code -->
-<script>
- $('#analyzeForm').on('submit', function (event) {
-    event.preventDefault();  // Prevent form submission
 
-    const formData = $(this).serialize();  // Serialize form data
-
-    $.ajax({
-        type: 'POST',
-        url: $(this).attr('action'),  // Ensure the form action URL is correctly set
-        data: formData,
-        success: function (response) {
-            // Check if the response indicates success
-            if (response.success) {
-                // Remove the row corresponding to the resolved concern
-                $(`a[data-id="${response.post_id}"]`).closest('tr').remove();
-
-                // Hide the modal
-                $('#analyzeModal').modal('hide');
-
-                // Redirect to posts.index page after success
-                window.location.href = '{{ route('posts.index') }}';  // Laravel route to posts.index
-            } else {
-                alert('Post not found or an error occurred: ' + response.message);
-            }
-        },
-        error: function () {
-            alert('An error occurred while resolving the concern.');
-        }
-    });
-});
-
-
-</script>
 
 <!-- add task and less task -->
 <script>
@@ -602,33 +592,6 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
 
 
-
-
-    <script>
-        // JavaScript to set the current date
-        document.addEventListener('DOMContentLoaded', function() {
-            const dateInput = document.getElementById('exampleInputDate1');
-            const currentDate = new Date().toISOString().split('T')[0]; // Get current date in 'YYYY-MM-DD' format
-            dateInput.value = currentDate;
-        });
-    </script>
-
-    <script>
-        // Function to get the current timestamp
-        function getCurrentTimestamp() {
-            // Create a new Date object
-            const currentDate = new Date();
-
-            // Format the date and time
-            const formattedDate = currentDate.toLocaleString(); // Example: "MM/DD/YYYY, HH:MM:SS AM/PM"
-
-            // Set the formatted date to the input field
-            document.getElementById('exampleInputDate1').value = formattedDate;
-        }
-
-        // Call the function on page load
-        window.onload = getCurrentT
-    </script>
 
 
     <!-- <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script> -->

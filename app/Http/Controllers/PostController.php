@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\Post;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+
 
 class PostController extends Controller
 {
@@ -58,7 +60,7 @@ class PostController extends Controller
             
             // Find the post by its ID
             $post = Post::findOrFail($data['post_id']);
-            
+            $post->endorsed_date = Carbon::now();  // Set the current date and time
             // Update the post with the validated data
             $post->endorse_to = $data['endorse_to'];
             $post->endorse_by = $data['endorse_by']; // Store the user who prepared the endorsement
@@ -105,38 +107,47 @@ class PostController extends Controller
 
     public function analyze(Request $request)
     {
+
+
+        // Find the post by ID
         $post = Post::find($request->posts_id);
-    if ($post) {
+        
+        // Check if the post exists
+        if (!$post) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Post not found.'
+            ]);
+        }
+
+          // If the post is endorsed (first time), set the endorsed_date
+          if (!$post->endorsed_date) {
+            $post->endorsed_date = Carbon::now();  // Set current date and time
+        }
+        // Update the post status and resolved date
         $post->status = 'Resolved';
-        $post->tasks = json_encode($request->input('tasks')); // Save tasks/actions
-        //$post->archived_at = now(); // Mark as archived
+        $tasks = $request->input('tasks', []);
+        //set the resolved date
+        $post->resolved_date = Carbon::now()->format('Y-m-d H:i:s');  // Set current date and time in 'Y-m-d H:i:s' format
+        $post->tasks = json_encode($request->input('tasks'));
+
+        // Calculate the difference in days
+        $resolvedDate = Carbon::parse($post->resolved_date);
+        $endorsedDate = Carbon::parse($post->endorsed_date);
+        $resolvedDays = $resolvedDate->diffInDays($endorsedDate);  // Get difference in days
+
+        // Save the resolved_days as JSON (you can store additional info if needed)
+        $post->resolved_days = json_encode([
+            'days_resolved' => $resolvedDays,
+            'resolved_date' => $post->resolved_date,
+        ]);
+
+        // Save the post to the database
         $post->save();
 
-        // Return JSON response with success status and post_id
-        return response()->json([
-            'success' => true,
-            'post_id' => $post->id,  // Include the post_id for the frontend to use
-        ]);
+    
+        return redirect()->route('posts.index')->with('success', '<span style="color: red;">Concern Successfully Resolved</span>');
+     
     }
 
-    // If the post is not found, return a failure response
-    return response()->json([
-        'success' => false,
-        'message' => 'Post not found.',
-    ]);
-    
-
-   
-        // return redirect()->route('posts.index')->with('success', 'Post analyzed successfully!');
- }
-//     public function resolveConcern($id)
-// {
-//     $post = Post::findOrFail($id);
-
-//     // Mark the concern as resolved
-//     $post->status = 'Resolved';
-//     $post->save();
-
-//     return redirect()->back()->with('success', 'Concern resolved successfully!');
-// }
 }
