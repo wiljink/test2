@@ -145,7 +145,7 @@
         @if($authenticatedUser['account_type_id'] != 7)
             <!-- Members Concerns (Only for non-admin users) -->
             <li class="nav-item">
-                <a class="nav-link text-white" href="#">Members Concerns</a>
+                <a class="nav-link text-white" href="{{ route('posts.index') }}">Members Concerns</a>
             </li>
         @endif
 
@@ -158,7 +158,7 @@
 
         <!-- Resolved Concerns (Visible for all) -->
         <li class="nav-item">
-            <a class="nav-link text-white" href="#">Resolved Concerns</a>
+            <a class="nav-link text-white" href="{{ route('posts.resolved') }}">Resolved Concerns</a>
         </li>
 
         <!-- Reports (Visible for all) -->

@@ -138,9 +138,11 @@ class PostController extends Controller
 
         // Save the resolved_days as JSON (you can store additional info if needed)
         $post->resolved_days = json_encode([
+            'Total' => $resolvedDays,
             'Days' => $resolvedDays->d,
             'Hours' => $resolvedDays->h,
             'Minutes' => $resolvedDays->i,
+            'Seconds' => $resolvedDays->s,
         ]);
         // $post->resolved_days = $resolvedDays->h;
         // Save the post to the database
@@ -150,5 +152,54 @@ class PostController extends Controller
         return redirect()->route('posts.index')->with('success', '<span style="color: red;">Concern Successfully Resolved</span>');
      
     }
+
+public function resolved()
+{
+    // Retrieve all resolved posts (or you can filter based on specific criteria)
+    $posts = Post::whereNotNull('resolved_days')->get();
+
+    $totalSeconds = 0;
+    $totalPosts = count($posts);
+
+    // Loop through each post and calculate its resolved time in seconds
+    foreach ($posts as $post) {
+        // Decode the resolved_days JSON (to get days, hours, minutes, seconds)
+        $resolvedTime = json_decode($post->resolved_days, true);
+
+        // Calculate the total time in seconds for each post
+        $totalSecondsForPost = ($resolvedTime['Days'] * 86400) +  // Convert days to seconds (1 day = 86400 seconds)
+                               ($resolvedTime['Hours'] * 3600) +   // Convert hours to seconds (1 hour = 3600 seconds)
+                               ($resolvedTime['Minutes'] * 60) +   // Convert minutes to seconds (1 minute = 60 seconds)
+                               $resolvedTime['Seconds'];          // Add the seconds
+
+        // Add the resolved time for this post to the total
+        $totalSeconds += $totalSecondsForPost;
+    }
+
+    // Calculate the average time in seconds
+    $averageSeconds = $totalSeconds / $totalPosts;
+
+    // Now, you can convert averageSeconds back into days, hours, minutes, and seconds
+    $averageDays = floor($averageSeconds / 86400);   // Convert to days
+    $averageSeconds %= 86400;                        // Get the remaining seconds after full days
+    $averageHours = floor($averageSeconds / 3600);   // Convert to hours
+    $averageSeconds %= 3600;                         // Get the remaining seconds after full hours
+    $averageMinutes = floor($averageSeconds / 60);   // Convert to minutes
+    $averageSeconds %= 60;                           // Get the remaining seconds
+
+
+    $average = [
+        'days' => $averageDays,
+        'hours' => $averageHours,
+        'minutes' => $averageMinutes,
+        'seconds' => $averageSeconds
+    ];
+
+    // Redirect to the resolved concerns page with the success message
+    return view('posts.resolved', compact('posts', 'average'));
+
+    }
+    
+  
 
 }

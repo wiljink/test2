@@ -32,6 +32,7 @@ Route::middleware(LoginMiddleware::class)->group(function () {
 
     Route::get('/posts', [PostController::class, 'index'])->name('posts.index');
 
+    Route::get('/resolved-concerns', [PostController::class, 'resolved'])->name('posts.resolved');
 
     Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
 
