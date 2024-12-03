@@ -153,55 +153,62 @@ class PostController extends Controller
      
     }
 
-public function resolved()
-{
-    // Retrieve all resolved posts (or you can filter based on specific criteria)
-    $posts = Post::whereNotNull('resolved_days')->get();
-
-
-    $totalSeconds = 0;
-    $totalPosts = count($posts);
-
-    // Loop through each post and calculate its resolved time in seconds
-    foreach ($posts as $post) {
-
-        // Decode the resolved_days JSON (to get days, hours, minutes, seconds)
-        $resolvedTime = json_decode($post->resolved_days, true);
-
-        // Calculate the total time in seconds for each post
-        $totalSecondsForPost = ($resolvedTime['Days'] * 86400) +  // Convert days to seconds (1 day = 86400 seconds)
-                               ($resolvedTime['Hours'] * 3600) +   // Convert hours to seconds (1 hour = 3600 seconds)
-                               ($resolvedTime['Minutes'] * 60) +   // Convert minutes to seconds (1 minute = 60 seconds)
-                               $resolvedTime['Seconds'];          // Add the seconds
-
-        // Add the resolved time for this post to the total
-        $totalSeconds += $totalSecondsForPost;
-    }
-
-    // Calculate the average time in seconds
-    $averageSeconds = $totalSeconds / $totalPosts;
-
-    // Now, you can convert averageSeconds back into days, hours, minutes, and seconds
-    $averageDays = floor($averageSeconds / 86400);   // Convert to days
-    $averageSeconds %= 86400;                        // Get the remaining seconds after full days
-    $averageHours = floor($averageSeconds / 3600);   // Convert to hours
-    $averageSeconds %= 3600;                         // Get the remaining seconds after full hours
-    $averageMinutes = floor($averageSeconds / 60);   // Convert to minutes
-    $averageSeconds %= 60;                           // Get the remaining seconds
-
-    // dd($averageDays);
-
-    $average = [
-        'days' => $averageDays,
-        'hours' => $averageHours,
-        'minutes' => $averageMinutes,
-        'seconds' => $averageSeconds
-    ];
-
-
-    // Redirect to the resolved concerns page with the success message
-    return view('posts.resolved', compact('posts', 'average'));
-
+    public function resolved()
+    {
+        // Retrieve all resolved posts
+        $posts = Post::whereNotNull('resolved_days')->get();
+    
+        // Group posts by branch
+        $groupedPosts = $posts->groupBy('branch');
+    
+        // Initialize an array to hold average resolution times for each branch and concern
+        $averagesByBranch = [];
+    
+        // Loop through each branch
+        foreach ($groupedPosts as $branch => $branchPosts) {
+            // Group posts by concern within the branch
+            $postsByConcern = $branchPosts->groupBy('concern');
+    
+            foreach ($postsByConcern as $concern => $concernPosts) {
+                $totalSeconds = 0;
+                $totalPosts = count($concernPosts);
+    
+                foreach ($concernPosts as $post) {
+                    // Decode the resolved_days JSON
+                    $resolvedTime = json_decode($post->resolved_days, true);
+    
+                    // Calculate the total time in seconds for this post
+                    $totalSecondsForPost = ($resolvedTime['Days'] * 86400) +
+                                           ($resolvedTime['Hours'] * 3600) +
+                                           ($resolvedTime['Minutes'] * 60) +
+                                           $resolvedTime['Seconds'];
+    
+                    $totalSeconds += $totalSecondsForPost;
+                }
+    
+                // Calculate the average time in seconds for this concern
+                $averageSeconds = $totalSeconds / $totalPosts;
+    
+                // Convert seconds into days, hours, minutes, and seconds
+                $averageDays = floor($averageSeconds / 86400);
+                $averageSeconds %= 86400;
+                $averageHours = floor($averageSeconds / 3600);
+                $averageSeconds %= 3600;
+                $averageMinutes = floor($averageSeconds / 60);
+                $averageSeconds %= 60;
+    
+                // Store the average resolution time
+                $averagesByBranch[$branch][$concern] = [
+                    'days' => $averageDays,
+                    'hours' => $averageHours,
+                    'minutes' => $averageMinutes,
+                    'seconds' => $averageSeconds
+                ];
+            }
+        }
+    
+        // Pass the data to the view
+        return view('posts.resolved', compact('averagesByBranch'));
     }
     
   
