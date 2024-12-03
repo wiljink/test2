@@ -134,14 +134,15 @@ class PostController extends Controller
         // Calculate the difference in days
         $resolvedDate = Carbon::parse($post->resolved_date);
         $endorsedDate = Carbon::parse($post->endorsed_date);
-        $resolvedDays = $resolvedDate->diffInDays($endorsedDate);  // Get difference in days
+        $resolvedDays = $endorsedDate->diff($resolvedDate);  // Get difference in days
 
         // Save the resolved_days as JSON (you can store additional info if needed)
         $post->resolved_days = json_encode([
-            'days_resolved' => $resolvedDays,
-            'resolved_date' => $post->resolved_date,
+            'Days' => $resolvedDays->d,
+            'Hours' => $resolvedDays->h,
+            'Minutes' => $resolvedDays->i,
         ]);
-
+        // $post->resolved_days = $resolvedDays->h;
         // Save the post to the database
         $post->save();
 

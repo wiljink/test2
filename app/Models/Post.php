@@ -22,5 +22,6 @@ class Post extends Model
         'status',
         'endorsed_date',
         'resolved_date',
+
     ];
 }

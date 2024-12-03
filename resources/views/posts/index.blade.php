@@ -325,11 +325,11 @@
                     @method('put')
 
                     <!-- Hidden input for the post ID -->
-                    <input type="text" name="post_id" id="post_id">
+                    <input type="hidden" name="post_id" id="post_id">
 
                     <!-- Prepared By - Hidden Field for Authenticated User -->
                     @if($authenticatedUser)
-                        <input type="text" name="endorse_by" id="endorse_by" value="{{ $authenticatedUser['id'] }}">
+                        <input type="hidden" name="endorse_by" id="endorse_by" value="{{ $authenticatedUser['id'] }}">
                     @endif
 
                     <!-- Endorse To - Select Dropdown -->
