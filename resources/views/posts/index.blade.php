@@ -147,6 +147,9 @@
             <li class="nav-item">
                 <a class="nav-link text-white" href="{{ route('posts.index') }}">Members Concerns</a>
             </li>
+            <li class="nav-item">
+                <a class="nav-link text-white" href="{{ route('posts.facilitate') }}">Facilitated Concerns</a>
+            </li>
         @endif
 
         @if($authenticatedUser['account_type_id'] == 7)
@@ -230,6 +233,7 @@
     @foreach($data as $posts)
     <!-- Exclude Resolved Rows -->
     @if($posts->status !== 'Resolved')
+
     <tr>
         <!-- Post Data -->
         <td>{{ $posts->id }}</td>
@@ -265,14 +269,16 @@
                     N/A
                 @endif
             </td>
-        <td>{{ $posts->status ?? 'Pending' }}</td>
-        <td>
-                <a href="#" id="analyzeButton" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#analyzeModal" data-id="{{ $posts->id }}"
-                data-name="{{ $posts->name }}" data-branch="{{ $posts->branch}}" data-contact="{{ $posts->contact_number }}" data-message="{{ $posts->message }}">
-                ANALYZE
-                </a>
-
-                </td>
+        <td>{{ $posts->status ?? 'pending' }}</td>
+        
+<td>
+    <a href="#" id="analyzeButton" class="btn btn-success @if($posts->status === 'pending') disabled @endif" 
+       data-bs-toggle="modal" data-bs-target="#analyzeModal" data-id="{{ $posts->id }}"data-name="{{ $posts->name }}" 
+       data-branch="{{ $posts->branch }}" data-contact="{{ $posts->contact_number }}" 
+       data-message="{{ $posts->message }}">
+        ANALYZE
+    </a>
+</td>
 
             @else
                 <td>
@@ -443,24 +449,23 @@
 $(document).on('click', '#analyzeButton', function () {
     const postId = $(this).data('id');
     const postName = $(this).data('name');
-    const postBranch = $(this).data('branch');
+    const postBranchName = $(this).data('branch');
     const postContact = $(this).data('contact');
     const postMessage = $(this).data('message');
-    const postResolvedDate = $(this).data('resolved_date');
+
 
 
 
     $('#posts_id').val(postId);
     $('#analyzePostName').val(postName);
-    $('#analyzeBranch').val(postBranch || '');
+    $('#analyzeBranch').val(postBranchName || '');
     $('#analyzeContact').val(postContact || '');
     $('#analyzeMessage').val(postMessage || '');
-    $('#analyzeResolvedDate').val(postResolvedDate || '');
+
 });
 
-
-
 </script>
+
 
 
 <!-- add task and less task -->

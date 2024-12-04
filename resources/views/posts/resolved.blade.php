@@ -30,8 +30,11 @@
 
 
 <div class="container mt-5">
+
+
+
     <h1 class="text-center mb-4">Resolve Concern</h1>
-    
+
     @foreach ($averagesByBranch as $branchName => $concerns)
         <div class="text-center mb-4">
             <h2 class="text-primary">Branch: {{ ucfirst($branchName) }}</h2>
