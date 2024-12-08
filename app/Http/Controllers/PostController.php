@@ -111,8 +111,6 @@ class PostController extends Controller
 
     public function analyze(Request $request)
     {
-
-
         // Find the post by ID
         $post = Post::find($request->posts_id);
 
@@ -124,38 +122,67 @@ class PostController extends Controller
             ]);
         }
 
-        // If the post is endorsed (first time), set the endorsed_date
-        if (!$post->endorsed_date) {
-            $post->endorsed_date = Carbon::now();  // Set current date and time
+        // Update tasks if provided
+        if ($request->has('tasks')) {
+            $post->tasks = json_encode($request->input('tasks'));
         }
-        // Update the post status and resolved date
-        $post->status = 'Resolved';
-        $tasks = $request->input('tasks', []);
-        //set the resolved date
-        $post->resolved_date = Carbon::now()->format('Y-m-d H:i:s');  // Set current date and time in 'Y-m-d H:i:s' format
-        $post->tasks = json_encode($request->input('tasks'));
 
-        // Calculate the difference in days
-        $resolvedDate = Carbon::parse($post->resolved_date);
-        $endorsedDate = Carbon::parse($post->endorsed_date);
-        $resolvedDays = $endorsedDate->diff($resolvedDate);  // Get difference in days
+        // Get the status from the request
+        $status = $request->input('status');
 
-        // Save the resolved_days as JSON (you can store additional info if needed)
-        $post->resolved_days = json_encode([
-            'Total' => $resolvedDays,
-            'Days' => $resolvedDays->d,
-            'Hours' => $resolvedDays->h,
-            'Minutes' => $resolvedDays->i,
-            'Seconds' => $resolvedDays->s,
+        if ($status === 'In Progress') {
+            // Set status to "In Progress"
+            $post->status = 'In Progress';
+
+            // Save the updated post
+            $post->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Progress saved successfully.'
+            ]);
+        } elseif ($status === 'Resolved') {
+            // If the post is endorsed (first time), set the endorsed_date
+            if (!$post->endorsed_date) {
+                $post->endorsed_date = Carbon::now(); // Set the current date and time
+            }
+
+            // Set status to "Resolved"
+            $post->status = 'Resolved';
+
+            // Set the resolved_date
+            $post->resolved_date = Carbon::now()->format('Y-m-d H:i:s'); // Current date and time in 'Y-m-d H:i:s' format
+
+            // Calculate the difference in days between resolved_date and endorsed_date
+            $resolvedDate = Carbon::parse($post->resolved_date);
+            $endorsedDate = Carbon::parse($post->endorsed_date);
+            $resolvedDays = $endorsedDate->diff($resolvedDate);
+
+            // Save the resolved_days as JSON
+            $post->resolved_days = json_encode([
+                'Total' => $resolvedDays,
+                'Days' => $resolvedDays->d,
+                'Hours' => $resolvedDays->h,
+                'Minutes' => $resolvedDays->i,
+                'Seconds' => $resolvedDays->s,
+            ]);
+
+            // Save the post
+            $post->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Concern successfully resolved.',
+            ]);
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Invalid status provided.',
         ]);
-        // $post->resolved_days = $resolvedDays->h;
-        // Save the post to the database
-        $post->save();
-
-
-        return redirect()->route('posts.index')->with('success', '<span style="color: red;">Concern Successfully Resolved</span>');
-
     }
+
+
 
     public function resolved()
     {

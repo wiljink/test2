@@ -172,7 +172,6 @@
 
 
                 <!-- Logout Button (Visible for all users) -->
-                <!-- Authenticated User Section -->
                 @if(isset($authenticatedUser))
                     <li class="nav-item dropdown">
                         <!-- User Dropdown -->
@@ -447,8 +446,13 @@
                         <button type="button" id="removeTaskButton" class="btn btn-danger" style="display: none;">Less Task</button>
                     </div>
 
-                    <!-- Submit Button -->
-                    <button type="submit" class="btn btn-success">Resolved</button>
+                    <!-- Resolved Button -->
+                    <button type="button" class="btn btn-success" onclick="submitForm('Resolved')">Resolved</button>
+
+                    <!-- Save Progress Button -->
+                    <button type="button" class="btn btn-primary" onclick="submitForm('In Progress')">Save Progress</button>
+
+
                 </form>
             </div>
         </div>
@@ -466,7 +470,7 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
 
 
-<!-- analyzemodalform -->
+<!-- analyzemodalform it will populate the modal text field -->
 <script>
 
     $(document).on('click', '#analyzeButton', function () {
@@ -475,9 +479,6 @@
         const postBranchName = $(this).data('branch');
         const postContact = $(this).data('contact');
         const postMessage = $(this).data('message');
-
-
-
 
         $('#posts_id').val(postId);
         $('#analyzePostName').val(postName);
@@ -491,7 +492,7 @@
 
 
 
-<!-- add task and less task -->
+<!-- add task and less task button -->
 <script>
     $(document).ready(function() {
         // Add Task functionality
@@ -557,37 +558,7 @@
         });
     });
 
-
-
 </script>
-
-
-<script>
-
-
-    document.addEventListener('DOMContentLoaded', function () {
-        const endorseForm = document.querySelector('#endorseForm');
-        const endorseButton = document.querySelectorAll('#endorseButton');
-
-        endorseForm.addEventListener('submit', function (e) {
-            // Get the post ID from the modal's hidden input
-            const postId = document.querySelector('#post_id').value;
-
-            // Find the corresponding Endorse button and disable it
-            endorseButton.forEach(button => {
-                if (button.dataset.id === postId) {
-                    button.disabled = true;
-                    button.classList.add('disabled'); // Add a CSS class for visual feedback
-                }
-            });
-
-            // Allow form submission to proceed
-        });
-    });
-
-
-</script>
-
 
 <!-- populate endorse to select value with their corresponding branch manager -->
 <script>
@@ -612,10 +583,81 @@
             }
         });
     });
+</script>
+
+
+
+{{--<script>--}}
+
+
+{{--    document.addEventListener('DOMContentLoaded', function () {--}}
+{{--        const endorseForm = document.querySelector('#endorseForm');--}}
+{{--        const endorseButton = document.querySelectorAll('#endorseButton');--}}
+
+{{--        endorseForm.addEventListener('submit', function (e) {--}}
+{{--            // Get the post ID from the modal's hidden input--}}
+{{--            const postId = document.querySelector('#post_id').value;--}}
+
+{{--            // Find the corresponding Endorse button and disable it--}}
+{{--            endorseButton.forEach(button => {--}}
+{{--                if (button.dataset.id === postId) {--}}
+{{--                    button.disabled = true;--}}
+{{--                    button.classList.add('disabled'); // Add a CSS class for visual feedback--}}
+{{--                }--}}
+{{--            });--}}
+
+{{--            // Allow form submission to proceed--}}
+{{--        });--}}
+{{--    });--}}
+
+
+{{--</script>--}}
 
 
 
 
+
+
+{{--allow a save progress function--}}
+<script>
+    function submitForm(status) {
+        const analyzeForm = document.getElementById('analyzeForm');
+        const formData = new FormData(analyzeForm);
+
+        // Add the status to the form data
+        formData.append('status', status);
+
+        // Send the form data using fetch
+        fetch('{{ route("posts.analyze") }}', {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: formData
+        })
+            .then(response => {
+                if (response.ok) {
+                    if (status === 'Resolved') {
+                        // Redirect on successful resolution
+                        window.location.href = '{{ route("posts.index") }}';
+                    } else {
+                        // Show success message for "Save Progress"
+                        return response.json().then(data => {
+                            alert(data.message || 'Progress saved successfully!');
+                        });
+                    }
+                } else {
+                    // Handle errors
+                    return response.json().then(data => {
+                        alert('Error: ' + (data.message || 'An unexpected error occurred.'));
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An unexpected error occurred.');
+            });
+    }
 
 </script>
 
