@@ -51,34 +51,34 @@ class PostController extends Controller
     public function update(Request $request)
     {
 
-            // Validate the incoming request data
-            $data = $request->validate([
-                'post_id' => 'required|integer',
-                'endorse_to' => 'required|string',
-                'endorse_by' => 'required|integer', // Authenticated user's ID
-            ]);
-            
-            // Find the post by its ID
-            $post = Post::findOrFail($data['post_id']);
-            $post->endorsed_date = Carbon::now();  // Set the current date and time
-            // Update the post with the validated data
-            $post->endorse_to = $data['endorse_to'];
-            $post->endorse_by = $data['endorse_by']; // Store the user who prepared the endorsement
-            $post->status = 'Endorsed'; // Set status to "Pending"
-            $post->save();
-        
-            // Return a success response with the post ID
-            return response()->json([
-                'success' => true,
-                'post_id' => $post->id,  // Include the post_id for the frontend to use
-            ]);
-    
-        
+        // Validate the incoming request data
+        $data = $request->validate([
+            'post_id' => 'required|integer',
+            'endorse_to' => 'required|string',
+            'endorse_by' => 'required|integer', // Authenticated user's ID
+        ]);
+
+        // Find the post by its ID
+        $post = Post::findOrFail($data['post_id']);
+        $post->endorsed_date = Carbon::now();  // Set the current date and time
+        // Update the post with the validated data
+        $post->endorse_to = $data['endorse_to'];
+        $post->endorse_by = $data['endorse_by']; // Store the user who prepared the endorsement
+        $post->status = 'Endorsed'; // Set status to "Pending"
+        $post->save();
+
+        // Return a success response with the post ID
+        return response()->json([
+            'success' => true,
+            'post_id' => $post->id,  // Include the post_id for the frontend to use
+        ]);
+
+
 
 
         //return redirect()->route('posts.index')->with('success', '<span style="color: red;">Concern Successfully Endorsed</span>');
-        }
-    
+    }
+
 
     public function index(Request $request)
     {
@@ -96,7 +96,11 @@ class PostController extends Controller
         $posts = Post::where('branch', $authenticatedUser['user']['branch_id'])->paginate(10);
         if ($authenticatedUser['user']['branch_id'] === 23) {
             $posts = Post::paginate(10);
-        }
+        } if ($authenticatedUser['user']['branch_id'] === 23) {
+    } else {
+        $posts = Post::where('endorse_to', $authenticatedUser['user']['oid'])->paginate(10);
+    }
+
 
         $data = Post::where('status', '!=', 'Resolved')->get();
 
@@ -111,7 +115,7 @@ class PostController extends Controller
 
         // Find the post by ID
         $post = Post::find($request->posts_id);
-        
+
         // Check if the post exists
         if (!$post) {
             return response()->json([
@@ -120,8 +124,8 @@ class PostController extends Controller
             ]);
         }
 
-          // If the post is endorsed (first time), set the endorsed_date
-          if (!$post->endorsed_date) {
+        // If the post is endorsed (first time), set the endorsed_date
+        if (!$post->endorsed_date) {
             $post->endorsed_date = Carbon::now();  // Set current date and time
         }
         // Update the post status and resolved date
@@ -148,47 +152,47 @@ class PostController extends Controller
         // Save the post to the database
         $post->save();
 
-    
+
         return redirect()->route('posts.index')->with('success', '<span style="color: red;">Concern Successfully Resolved</span>');
-     
+
     }
 
     public function resolved()
     {
         // Retrieve all resolved posts
         $posts = Post::whereNotNull('resolved_days')->get();
-    
+
         // Group posts by branch
         $groupedPosts = $posts->groupBy('branch');
-    
+
         // Initialize an array to hold average resolution times for each branch and concern
         $averagesByBranch = [];
-    
+
         // Loop through each branch
         foreach ($groupedPosts as $branch => $branchPosts) {
             // Group posts by concern within the branch
             $postsByConcern = $branchPosts->groupBy('concern');
-    
+
             foreach ($postsByConcern as $concern => $concernPosts) {
                 $totalSeconds = 0;
                 $totalPosts = count($concernPosts);
-    
+
                 foreach ($concernPosts as $post) {
                     // Decode the resolved_days JSON
                     $resolvedTime = json_decode($post->resolved_days, true);
-    
+
                     // Calculate the total time in seconds for this post
                     $totalSecondsForPost = ($resolvedTime['Days'] * 86400) +
-                                           ($resolvedTime['Hours'] * 3600) +
-                                           ($resolvedTime['Minutes'] * 60) +
-                                           $resolvedTime['Seconds'];
-    
+                        ($resolvedTime['Hours'] * 3600) +
+                        ($resolvedTime['Minutes'] * 60) +
+                        $resolvedTime['Seconds'];
+
                     $totalSeconds += $totalSecondsForPost;
                 }
-    
+
                 // Calculate the average time in seconds for this concern
                 $averageSeconds = $totalSeconds / $totalPosts;
-    
+
                 // Convert seconds into days, hours, minutes, and seconds
                 $averageDays = floor($averageSeconds / 86400);
                 $averageSeconds %= 86400;
@@ -196,7 +200,7 @@ class PostController extends Controller
                 $averageSeconds %= 3600;
                 $averageMinutes = floor($averageSeconds / 60);
                 $averageSeconds %= 60;
-    
+
                 // Store the average resolution time
                 $averagesByBranch[$branch][$concern] = [
                     'days' => $averageDays,
@@ -206,65 +210,65 @@ class PostController extends Controller
                 ];
             }
         }
-    
+
         // Pass the data to the view
         return view('posts.resolved', compact('averagesByBranch'));
     }
     public function facilitate()
     {
         // Retrieve all concerns with a valid concern_received_date and endorsed_date
-    $posts = Post::whereNotNull('created_at')
-    ->whereNotNull('endorsed_date')
-    ->get();
+        $posts = Post::whereNotNull('created_at')
+            ->whereNotNull('endorsed_date')
+            ->get();
 
 // Group posts by branch
-$groupedPosts = $posts->groupBy('branch');
+        $groupedPosts = $posts->groupBy('branch');
 
 // Initialize an array to hold average facilitation times for each branch and concern
-$averagesByBranch = [];
+        $averagesByBranch = [];
 
 // Loop through each branch
-foreach ($groupedPosts as $branch => $branchPosts) {
+        foreach ($groupedPosts as $branch => $branchPosts) {
 // Group posts by concern within the branch
-$postsByConcern = $branchPosts->groupBy('concern');
+            $postsByConcern = $branchPosts->groupBy('concern');
 
-foreach ($postsByConcern as $concern => $concernPosts) {
-$totalSeconds = 0;
-$totalPosts = count($concernPosts);
+            foreach ($postsByConcern as $concern => $concernPosts) {
+                $totalSeconds = 0;
+                $totalPosts = count($concernPosts);
 
-foreach ($concernPosts as $post) {
-   // Calculate the difference in seconds between concern_received_date and endorsed_date
-   $receivedDate = \Carbon\Carbon::parse($post->concern_received_date);
-   $endorsedDate = \Carbon\Carbon::parse($post->endorsed_date);
+                foreach ($concernPosts as $post) {
+                    // Calculate the difference in seconds between concern_received_date and endorsed_date
+                    $receivedDate = \Carbon\Carbon::parse($post->concern_received_date);
+                    $endorsedDate = \Carbon\Carbon::parse($post->endorsed_date);
 
-   $diffInSeconds = $endorsedDate->diffInSeconds($receivedDate);
+                    $diffInSeconds = $endorsedDate->diffInSeconds($receivedDate);
 
-   $totalSeconds += $diffInSeconds;
-}
+                    $totalSeconds += $diffInSeconds;
+                }
 
 // Calculate the average time in seconds for this concern
-$averageSeconds = $totalSeconds / $totalPosts;
+                $averageSeconds = $totalSeconds / $totalPosts;
 
 // Convert seconds into days, hours, minutes, and seconds
-$averageDays = floor($averageSeconds / 86400);
-$averageSeconds %= 86400;
-$averageHours = floor($averageSeconds / 3600);
-$averageSeconds %= 3600;
-$averageMinutes = floor($averageSeconds / 60);
-$averageSeconds %= 60;
+                $averageDays = floor($averageSeconds / 86400);
+                $averageSeconds %= 86400;
+                $averageHours = floor($averageSeconds / 3600);
+                $averageSeconds %= 3600;
+                $averageMinutes = floor($averageSeconds / 60);
+                $averageSeconds %= 60;
 
 // Store the average facilitation time
-$averagesByBranch[$branch][$concern] = [
-   'days' => $averageDays,
-   'hours' => $averageHours,
-   'minutes' => $averageMinutes,
-   'seconds' => $averageSeconds
-];
-}
-}
+                $averagesByBranch[$branch][$concern] = [
+                    'days' => $averageDays,
+                    'hours' => $averageHours,
+                    'minutes' => $averageMinutes,
+                    'seconds' => $averageSeconds
+                ];
+            }
+        }
 
 // Pass the data to the view
-return view('posts.resolved', compact('averagesByBranch'));
+        return view('posts.resolved', compact('averagesByBranch'));
     }
-    
+
 }

@@ -30,13 +30,20 @@ Route::middleware(LoginMiddleware::class)->group(function () {
 
     Route::put('/posts/analyze', [PostController::class, 'analyze'])->name('posts.analyze');
 
+    //Route::post('/posts/save-progress', [PostController::class, 'saveProgress'])->name('posts.saveProgress');
+
     Route::get('/posts', [PostController::class, 'index'])->name('posts.index');
 
     Route::get('/resolved-concerns', [PostController::class, 'resolved'])->name('posts.resolved');
 
     Route::get('/resolved-facilitate', [PostController::class, 'facilitate'])->name('posts.facilitate');
 
+
+
+
     Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
+
+
 
 
 });
@@ -48,22 +55,6 @@ Route::get('/posts/success', function () {
     return view('posts.thank_you');
 });
 
-//navigation menu
-// Route::get('/', function () {
-//     return view('home');
-// })->name('home');
-
-// Route::get('/about', function () {
-//     return view('about');
-// })->name('about');
-
-// Route::get('/services', function () {
-//     return view('services');
-// })->name('services');
-
-// Route::get('/contact', function () {
-//     return view('contact');
-// })->name('contact');
 
 
 

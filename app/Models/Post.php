@@ -20,8 +20,11 @@ class Post extends Model
         'endorsed_by',
         'endorsed_to',
         'status',
+        'tasks',
         'endorsed_date',
         'resolved_date',
 
     ];
+
 }
+
