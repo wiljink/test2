@@ -117,6 +117,46 @@
             background-color: #f9f9f9;
         }
     </style>
+    <style>
+        /* Base button style */
+.save-progress-btn {
+    padding: 10px 20px;
+    font-size: 16px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Style for the loading dots */
+.save-progress-btn.loading::after {
+    content: '...';
+    position: absolute;
+    right: 10px;
+    font-size: 20px;
+    animation: dot-blink 1s infinite steps(1);
+}
+
+/* Animation for the dots */
+@keyframes dot-blink {
+    0% { content: '.'; }
+    33% { content: '..'; }
+    66% { content: '...'; }
+    100% { content: '.'; }
+}
+
+/* Disable button when loading */
+.save-progress-btn.loading {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+    </style>
     <title>Member Concern</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
@@ -273,7 +313,28 @@
 
                     @if($authenticatedUser['account_type_id'] == 7)
                         <td>{{ $posts->endorse_by ?? 'N/A' }}</td>
-                        <td>{{ $posts->tasks }}</td>
+
+                        <td>
+                            
+                        @if(empty($posts->tasks) || !is_array($posts->tasks) || count($posts->tasks) == 0)
+                                @php
+                                    $tasks = json_decode($posts->tasks, true); // Decode the JSON string to an array
+                                @endphp
+
+                                @if($tasks && is_array($tasks) && count($tasks) > 0)
+                                    <ol style="font-family: 'Poppins', sans-serif;">
+                                        @foreach($tasks as $task)
+                                            <li>{{ $task }}</li>
+                                        @endforeach
+                                    </ol>
+                                @else
+                                <p style="color: red;">No tasks available.</p> <!-- Message if no tasks are available -->
+                                @endif
+                            @endif
+
+                    </td>
+
+
                         <td>
                             @if ($posts->resolved_days)
                                 @php
@@ -446,8 +507,10 @@
                         <label class="form-label">Action Taken</label>
                         <div id="tasksContainer">
                             <!-- Initial Task -->
+                           
                             <input type="text" name="tasks[]" class="form-control mb-2" placeholder="Action 1" required>
                         </div>
+
                         <button type="button" id="addTaskButton" class="btn btn-secondary">Add Task</button>
                         <button type="button" id="removeTaskButton" class="btn btn-danger" style="display: none;">Less Task</button>
                     </div>
@@ -623,19 +686,16 @@
 
 
 
-<!-- {{--allow a save progress function--}} -->
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    // Get references to the buttons
-    const resolvedButton = document.getElementById('resolvedButton');
     const saveProgressButton = document.getElementById('saveProgressButton');
 
-    // Add event listeners to the buttons
-    resolvedButton.addEventListener('click', function () {
-        submitForm('Resolved');
-    });
-
+    // Add event listener for the "Save Progress" button
     saveProgressButton.addEventListener('click', function () {
+        // Add the "loading" class to show the loading dots
+        saveProgressButton.classList.add('loading');
+
+        // Submit the form (simulate a save process)
         submitForm('In Progress');
     });
 
@@ -660,34 +720,28 @@ document.addEventListener('DOMContentLoaded', function () {
             },
             body: formData
         })
-            .then(response => {
-                if (!response.ok) {
-                    return response.json().then(data => {
-                        throw new Error(data.message || 'An error occurred.');
-                    });
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    alert(data.message || `Operation ${status} successful.`);
-                    if (status === 'Resolved') {
-                        window.location.href = '{{ route("posts.index") }}';
-                    }
-                } else {
-                    throw new Error(data.message || 'Operation failed.');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Error: ' + error.message);
-            });
+        .then(response => {
+            if (!response.ok) {
+                return response.text().then(text => {
+                    throw new Error(text || 'An error occurred.');
+                });
+            }
+            return response.text(); // Get response as text (HTML)
+        })
+        .then(html => {
+            // Redirect to posts.index after success
+            window.location.href = '{{ route("posts.index") }}';
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            // Handle the error, and possibly stop the loading dots
+            saveProgressButton.classList.remove('loading');
+        });
     }
 });
-
-
-
 </script>
+
+
 
 
 

@@ -131,6 +131,12 @@ class PostController extends Controller
         // Update tasks if provided
         if (!empty($validatedData['tasks'])) {
             $post->tasks = json_encode($validatedData['tasks']);
+            
+        }
+
+         // Decode tasks if stored as a JSON string
+         if (is_string($post->tasks)) {
+            $post->tasks = json_decode($post->tasks, true);  // Decode JSON string into array
         }
 
         $currentTime = Carbon::now(); // Capture the current time once
@@ -172,7 +178,6 @@ class PostController extends Controller
 
             // Save the post
             $post->save();
-
             // Redirect to the posts.index route with a success message
             return redirect()->route('posts.index')->with('success', 'Concern successfully resolved.');
         }
