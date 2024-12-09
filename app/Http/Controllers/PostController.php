@@ -95,6 +95,11 @@ class PostController extends Controller
         // Retrieve only the concerns that belong to the authenticated user
         $posts = Post::where('branch', $authenticatedUser['user']['branch_id'])->paginate(10);
 
+        // Get the post with tasks stored as JSON
+
+    // // Decode the JSON string of tasks into an array
+    // $tasks = json_decode($post->tasks, true);
+
         
         if ($authenticatedUser['user']['branch_id'] === 23) {
             $posts = Post::paginate(10);

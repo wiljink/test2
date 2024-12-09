@@ -315,14 +315,14 @@
                         <td>{{ $posts->endorse_by ?? 'N/A' }}</td>
 
                         <td>
-                            
+
                         @if(empty($posts->tasks) || !is_array($posts->tasks) || count($posts->tasks) == 0)
                                 @php
                                     $tasks = json_decode($posts->tasks, true); // Decode the JSON string to an array
                                 @endphp
 
                                 @if($tasks && is_array($tasks) && count($tasks) > 0)
-                                    <ol style="font-family: 'Poppins', sans-serif;">
+                                    <ol style="font-family: 'Poppins', sans-serif; text-align: justify;">
                                         @foreach($tasks as $task)
                                             <li>{{ $task }}</li>
                                         @endforeach
