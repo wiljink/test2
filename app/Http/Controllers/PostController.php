@@ -94,6 +94,8 @@ class PostController extends Controller
         //updated code
         // Retrieve only the concerns that belong to the authenticated user
         $posts = Post::where('branch', $authenticatedUser['user']['branch_id'])->paginate(10);
+
+        
         if ($authenticatedUser['user']['branch_id'] === 23) {
             $posts = Post::paginate(10);
         } if ($authenticatedUser['user']['branch_id'] === 23) {
@@ -110,25 +112,29 @@ class PostController extends Controller
     }
 
     public function analyze(Request $request)
-    {
-        // Find the post by ID
-        $post = Post::find($request->posts_id);
+{
+    try {
+        // Validate incoming request data
+        $validatedData = $request->validate([
+            'posts_id' => 'required|integer|exists:posts,id',
+            'status' => 'required|string|in:In Progress,Resolved',
+            'tasks' => 'nullable|array',
+        ]);
 
-        // Check if the post exists
+        // Find the post by ID
+        $post = Post::find($validatedData['posts_id']);
+
         if (!$post) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Post not found.'
-            ]);
+            return redirect()->back()->with('error', 'Post not found.');
         }
 
         // Update tasks if provided
-        if ($request->has('tasks')) {
-            $post->tasks = json_encode($request->input('tasks'));
+        if (!empty($validatedData['tasks'])) {
+            $post->tasks = json_encode($validatedData['tasks']);
         }
 
-        // Get the status from the request
-        $status = $request->input('status');
+        $currentTime = Carbon::now(); // Capture the current time once
+        $status = $validatedData['status'];
 
         if ($status === 'In Progress') {
             // Set status to "In Progress"
@@ -137,51 +143,53 @@ class PostController extends Controller
             // Save the updated post
             $post->save();
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Progress saved successfully.'
-            ]);
+            // Redirect to the posts.index route with a success message
+            return redirect()->route('posts.index')->with('success', 'Progress saved successfully.');
         } elseif ($status === 'Resolved') {
             // If the post is endorsed (first time), set the endorsed_date
             if (!$post->endorsed_date) {
-                $post->endorsed_date = Carbon::now(); // Set the current date and time
+                $post->endorsed_date = $currentTime;
             }
 
             // Set status to "Resolved"
             $post->status = 'Resolved';
 
             // Set the resolved_date
-            $post->resolved_date = Carbon::now()->format('Y-m-d H:i:s'); // Current date and time in 'Y-m-d H:i:s' format
+            $post->resolved_date = $currentTime;
 
             // Calculate the difference in days between resolved_date and endorsed_date
-            $resolvedDate = Carbon::parse($post->resolved_date);
             $endorsedDate = Carbon::parse($post->endorsed_date);
-            $resolvedDays = $endorsedDate->diff($resolvedDate);
+            $resolvedDays = $endorsedDate->diff($currentTime);
 
             // Save the resolved_days as JSON
             $post->resolved_days = json_encode([
-                'Total' => $resolvedDays,
-                'Days' => $resolvedDays->d,
-                'Hours' => $resolvedDays->h,
-                'Minutes' => $resolvedDays->i,
-                'Seconds' => $resolvedDays->s,
+                'total_difference' => $resolvedDays->format('%a days, %h hours, %i minutes, %s seconds'),
+                'days' => $resolvedDays->d,
+                'hours' => $resolvedDays->h,
+                'minutes' => $resolvedDays->i,
+                'seconds' => $resolvedDays->s,
             ]);
 
             // Save the post
             $post->save();
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Concern successfully resolved.',
-            ]);
+            // Redirect to the posts.index route with a success message
+            return redirect()->route('posts.index')->with('success', 'Concern successfully resolved.');
         }
 
-        return response()->json([
-            'success' => false,
-            'message' => 'Invalid status provided.',
-        ]);
-    }
+        // Redirect back if the status is invalid
+        return redirect()->back()->with('error', 'Invalid status provided.');
 
+    } catch (\Illuminate\Validation\ValidationException $e) {
+        // Handle validation errors
+        return redirect()->back()
+            ->withErrors($e->validator)
+            ->withInput();
+    } catch (\Exception $e) {
+        // Handle any other exceptions
+        return redirect()->back()->with('error', $e->getMessage());
+    }
+}
 
 
     public function resolved()
@@ -209,10 +217,11 @@ class PostController extends Controller
                     $resolvedTime = json_decode($post->resolved_days, true);
 
                     // Calculate the total time in seconds for this post
-                    $totalSecondsForPost = ($resolvedTime['Days'] * 86400) +
-                        ($resolvedTime['Hours'] * 3600) +
-                        ($resolvedTime['Minutes'] * 60) +
-                        $resolvedTime['Seconds'];
+                    $totalSecondsForPost = ($resolvedTime['Days'] ?? 0) * 86400 +
+                        ($resolvedTime['Hours'] ?? 0) * 3600 +
+                        ($resolvedTime['Minutes'] ?? 0) * 60 +
+                        ($resolvedTime['Seconds'] ?? 0);
+
 
                     $totalSeconds += $totalSecondsForPost;
                 }

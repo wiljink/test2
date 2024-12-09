@@ -118,6 +118,7 @@
         }
     </style>
     <title>Member Concern</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
 
 <body>
@@ -227,8 +228,8 @@
 
 <div class="container d-flex flex-column align-items-center my-4" style="min-height: 100vh;">
 
-    <table class="table">
-        <thead>
+<table class="table">
+    <thead>
         <tr>
             <th scope="col">ID</th>
             <th scope="col">NAME</th>
@@ -237,9 +238,8 @@
             <th scope="col">CONCERN RECEIVED DATE</th>
             <th scope="col">CONCERN</th>
             <th scope="col">MESSAGE</th>
-
-
-            @if($authenticatedUser['account_type_id']== 7)
+            
+            @if($authenticatedUser['account_type_id'] == 7)
                 <th scope="col">PREPARED BY</th>
                 <th scope="col">TASK</th>
                 <th scope="col">DAYS RESOLVED</th>
@@ -250,12 +250,11 @@
                 <th scope="col">ACTION</th> <!-- ACTION column for other users -->
             @endif
         </tr>
-        </thead>
-        <tbody>
+    </thead>
+    <tbody>
         @foreach($data as $posts)
             <!-- Exclude Resolved Rows -->
             @if($posts->status !== 'Resolved')
-
                 <tr>
                     <!-- Post Data -->
                     <td>{{ $posts->id }}</td>
@@ -272,61 +271,68 @@
                     <td>{{ $posts->concern }}</td>
                     <td>{{ $posts->message }}</td>
 
-                    <!-- Conditional Columns Based on Account Type -->
                     @if($authenticatedUser['account_type_id'] == 7)
                         <td>{{ $posts->endorse_by ?? 'N/A' }}</td>
                         <td>{{ $posts->tasks }}</td>
-
                         <td>
                             @if ($posts->resolved_days)
-                                {{ $posts->resolved_days['days_resolved'] }} days
+                                @php
+                                    $resolvedDays = json_decode($posts->resolved_days, true);
+                                @endphp
+                                {{ $resolvedDays['days'] ?? 'N/A' }} days
                             @else
                                 N/A
                             @endif
                         </td>
                         <td>
                             @if ($posts->resolved_days)
-                                {{ $posts->resolved_days['resolved_date'] }}
+                                @php
+                                    $resolvedDays = json_decode($posts->resolved_days, true);
+                                @endphp
+                                {{ $resolvedDays['resolved_date'] ?? 'N/A' }}
                             @else
                                 N/A
                             @endif
                         </td>
-                        <td>{{ $posts->status ?? 'pending' }}</td>
-
-                        <td>
-                            <a href="#" id="analyzeButton" class="btn btn-success @if($posts->status === 'pending') disabled @endif"
-                               data-bs-toggle="modal" data-bs-target="#analyzeModal" data-id="{{ $posts->id }}"data-name="{{ $posts->name }}"
-                               data-branch="{{ $posts->branch }}" data-contact="{{ $posts->contact_number }}"
+                        <td>{{ $posts->status ?? 'Pending' }}</td>
+                    @endif
+                    
+                    
+                    <td>
+                        @if($authenticatedUser['account_type_id'] == 7)
+                            <a href="#" id="analyzeButton" 
+                               class="btn btn-success @if($posts->status === 'Pending') disabled @endif"
+                               data-bs-toggle="modal" 
+                               data-bs-target="#analyzeModal" 
+                               data-id="{{ $posts->id }}"
+                               data-name="{{ $posts->name }}"
+                               data-branch="{{ $posts->branch }}" 
+                               data-contact="{{ $posts->contact_number }}"
                                data-message="{{ $posts->message }}">
                                 ANALYZE
                             </a>
-                        </td>
-
-                    @else
-                        <td>
-
+                        @else
                             @if($posts->status === 'Resolved')
                                 <!-- Do not render Endorse button for resolved concerns -->
                             @else
-                                <a href="#"
-                                   id="endorseButton"
+                                <a href="#" id="endorseButton" 
                                    class="btn btn-primary @if($posts->status === 'Endorsed') disabled @endif"
-                                   data-bs-toggle="modal"
-                                   data-bs-target="#endorseModal"
-                                   data-id="{{ $posts->id }}"
-                                   data-branch="{{ $posts->branch }}"
+                                   data-bs-toggle="modal" 
+                                   data-bs-target="#endorseModal" 
+                                   data-id="{{ $posts->id }}" 
+                                   data-branch="{{ $posts->branch }}" 
                                    data-branch-manager-id="{{ optional($posts->branch_manager)->id }}">
                                     ENDORSE
                                 </a>
                             @endif
-
-                        </td>
-                    @endif
+                        @endif
+                    </td>
                 </tr>
             @endif
         @endforeach
-        </tbody>
-    </table>
+    </tbody>
+</table>
+
 
 
 
@@ -446,11 +452,10 @@
                         <button type="button" id="removeTaskButton" class="btn btn-danger" style="display: none;">Less Task</button>
                     </div>
 
-                    <!-- Resolved Button -->
-                    <button type="button" class="btn btn-success" onclick="submitForm('Resolved')">Resolved</button>
+                    <!-- Buttons without inline JavaScript -->
+                    <button id="resolvedButton" type="button" class="btn btn-success">Resolved</button>
+                    <button id="saveProgressButton" type="button" class="btn btn-primary">Save Progress</button>
 
-                    <!-- Save Progress Button -->
-                    <button type="button" class="btn btn-primary" onclick="submitForm('In Progress')">Save Progress</button>
 
 
                 </form>
@@ -587,7 +592,7 @@
 
 
 
-{{--<script>--}}
+<!-- {{--<script>--}}
 
 
 {{--    document.addEventListener('DOMContentLoaded', function () {--}}
@@ -611,23 +616,43 @@
 {{--    });--}}
 
 
-{{--</script>--}}
+{{--</script>--}} -->
 
 
 
 
 
 
-{{--allow a save progress function--}}
+<!-- {{--allow a save progress function--}} -->
 <script>
-    function submitForm(status) {
-        const analyzeForm = document.getElementById('analyzeForm');
-        const formData = new FormData(analyzeForm);
+document.addEventListener('DOMContentLoaded', function () {
+    // Get references to the buttons
+    const resolvedButton = document.getElementById('resolvedButton');
+    const saveProgressButton = document.getElementById('saveProgressButton');
 
-        // Add the status to the form data
+    // Add event listeners to the buttons
+    resolvedButton.addEventListener('click', function () {
+        submitForm('Resolved');
+    });
+
+    saveProgressButton.addEventListener('click', function () {
+        submitForm('In Progress');
+    });
+
+    function submitForm(status) {
+        console.log('Submitting form with status:', status);
+
+        const analyzeForm = document.getElementById('analyzeForm');
+        if (!analyzeForm) {
+            console.error('Form not found');
+            return;
+        }
+
+        const formData = new FormData(analyzeForm);
+        const taskInputs = document.querySelectorAll('input[name="tasks[]"]');
+        taskInputs.forEach(input => formData.append('tasks[]', input.value));
         formData.append('status', status);
 
-        // Send the form data using fetch
         fetch('{{ route("posts.analyze") }}', {
             method: 'POST',
             headers: {
@@ -636,28 +661,31 @@
             body: formData
         })
             .then(response => {
-                if (response.ok) {
+                if (!response.ok) {
+                    return response.json().then(data => {
+                        throw new Error(data.message || 'An error occurred.');
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    alert(data.message || `Operation ${status} successful.`);
                     if (status === 'Resolved') {
-                        // Redirect on successful resolution
                         window.location.href = '{{ route("posts.index") }}';
-                    } else {
-                        // Show success message for "Save Progress"
-                        return response.json().then(data => {
-                            alert(data.message || 'Progress saved successfully!');
-                        });
                     }
                 } else {
-                    // Handle errors
-                    return response.json().then(data => {
-                        alert('Error: ' + (data.message || 'An unexpected error occurred.'));
-                    });
+                    throw new Error(data.message || 'Operation failed.');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('An unexpected error occurred.');
+                alert('Error: ' + error.message);
             });
     }
+});
+
+
 
 </script>
 
