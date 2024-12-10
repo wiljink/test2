@@ -345,6 +345,7 @@
                                 N/A
                             @endif
                         </td>
+
                         <td>
                             @if ($posts->resolved_days)
                                 @php
@@ -355,6 +356,7 @@
                                 N/A
                             @endif
                         </td>
+
                         <td>{{ $posts->status ?? 'Pending' }}</td>
                     @endif
                     
@@ -654,38 +656,6 @@
 </script>
 
 
-
-<!-- {{--<script>--}}
-
-
-{{--    document.addEventListener('DOMContentLoaded', function () {--}}
-{{--        const endorseForm = document.querySelector('#endorseForm');--}}
-{{--        const endorseButton = document.querySelectorAll('#endorseButton');--}}
-
-{{--        endorseForm.addEventListener('submit', function (e) {--}}
-{{--            // Get the post ID from the modal's hidden input--}}
-{{--            const postId = document.querySelector('#post_id').value;--}}
-
-{{--            // Find the corresponding Endorse button and disable it--}}
-{{--            endorseButton.forEach(button => {--}}
-{{--                if (button.dataset.id === postId) {--}}
-{{--                    button.disabled = true;--}}
-{{--                    button.classList.add('disabled'); // Add a CSS class for visual feedback--}}
-{{--                }--}}
-{{--            });--}}
-
-{{--            // Allow form submission to proceed--}}
-{{--        });--}}
-{{--    });--}}
-
-
-{{--</script>--}} -->
-
-
-
-
-
-
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const saveProgressButton = document.getElementById('saveProgressButton');
@@ -709,8 +679,18 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         const formData = new FormData(analyzeForm);
+
+        // Collect tasks[] values without duplicating
         const taskInputs = document.querySelectorAll('input[name="tasks[]"]');
-        taskInputs.forEach(input => formData.append('tasks[]', input.value));
+        const uniqueTasks = [...new Set(Array.from(taskInputs).map(input => input.value.trim()))];
+
+        // Append only unique values to formData
+        uniqueTasks.forEach(task => {
+            if (task) { // Ensure no empty tasks are added
+                formData.append('tasks[]', task);
+            }
+        });
+
         formData.append('status', status);
 
         fetch('{{ route("posts.analyze") }}', {
@@ -740,6 +720,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 });
 </script>
+
 
 
 

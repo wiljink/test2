@@ -124,6 +124,7 @@ class PostController extends Controller
             'posts_id' => 'required|integer|exists:posts,id',
             'status' => 'required|string|in:In Progress,Resolved',
             'tasks' => 'nullable|array',
+
         ]);
 
         // Find the post by ID
@@ -135,14 +136,17 @@ class PostController extends Controller
 
         // Update tasks if provided
         if (!empty($validatedData['tasks'])) {
-            $post->tasks = json_encode($validatedData['tasks']);
-            
+            $existingTasks = $post->tasks ? json_decode($post->tasks, true) : [];
+            $mergedTasks = array_unique(array_merge($existingTasks, $validatedData['tasks']));
+            $post->tasks = json_encode($mergedTasks);
         }
+
 
          // Decode tasks if stored as a JSON string
          if (is_string($post->tasks)) {
             $post->tasks = json_decode($post->tasks, true);  // Decode JSON string into array
         }
+        
 
         $currentTime = Carbon::now(); // Capture the current time once
         $status = $validatedData['status'];
