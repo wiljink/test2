@@ -659,17 +659,23 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const saveProgressButton = document.getElementById('saveProgressButton');
+    const resolveButton = document.getElementById('resolvedButton');
 
     // Add event listener for the "Save Progress" button
     saveProgressButton.addEventListener('click', function () {
-        // Add the "loading" class to show the loading dots
+        saveProgressButton.disabled = true; // Disable button to prevent multiple clicks
         saveProgressButton.classList.add('loading');
-
-        // Submit the form (simulate a save process)
-        submitForm('In Progress');
+        submitForm('In Progress', saveProgressButton);
     });
 
-    function submitForm(status) {
+    // Add event listener for the "Resolve" button
+    resolveButton.addEventListener('click', function () {
+        resolveButton.disabled = true; // Disable button to prevent multiple clicks
+        resolveButton.classList.add('loading');
+        submitForm('Resolved', resolveButton);
+    });
+
+    function submitForm(status, button) {
         console.log('Submitting form with status:', status);
 
         const analyzeForm = document.getElementById('analyzeForm');
@@ -684,7 +690,6 @@ document.addEventListener('DOMContentLoaded', function () {
         const taskInputs = document.querySelectorAll('input[name="tasks[]"]');
         const uniqueTasks = [...new Set(Array.from(taskInputs).map(input => input.value.trim()))];
 
-        // Append only unique values to formData
         uniqueTasks.forEach(task => {
             if (task) { // Ensure no empty tasks are added
                 formData.append('tasks[]', task);
@@ -714,11 +719,46 @@ document.addEventListener('DOMContentLoaded', function () {
         })
         .catch(error => {
             console.error('Error:', error);
-            // Handle the error, and possibly stop the loading dots
-            saveProgressButton.classList.remove('loading');
+            // Handle the error and reset the button
+            button.disabled = false;
+            button.classList.remove('loading');
         });
     }
 });
+
+
+// const tasksContainer = document.getElementById('tasksContainer');
+// const addTaskButton = document.getElementById('addTaskButton');
+// const removeTaskButton = document.getElementById('removeTaskButton');
+
+// addTaskButton.addEventListener('click', function () {
+//     const newTaskInput = document.createElement('input');
+//     newTaskInput.type = 'text';
+//     newTaskInput.name = 'tasks[]';
+//     newTaskInput.className = 'form-control mb-2';
+//     newTaskInput.placeholder = `Action ${tasksContainer.childElementCount + 1}`;
+//     tasksContainer.appendChild(newTaskInput);
+
+//     removeTaskButton.style.display = tasksContainer.childElementCount > 1 ? 'inline' : 'none';
+// });
+
+// removeTaskButton.addEventListener('click', function () {
+//     if (tasksContainer.lastChild) {
+//         tasksContainer.removeChild(tasksContainer.lastChild);
+//         removeTaskButton.style.display = tasksContainer.childElementCount > 1 ? 'inline' : 'none';
+//     }
+// });
+
+// // Prevent duplicate entries in the tasks
+// tasksContainer.addEventListener('change', function () {
+//     const taskValues = Array.from(tasksContainer.querySelectorAll('input')).map(input => input.value);
+//     const uniqueValues = new Set(taskValues);
+
+//     if (taskValues.length !== uniqueValues.size) {
+//         alert('Duplicate task detected. Please ensure all tasks are unique.');
+//     }
+// });
+
 </script>
 
 
