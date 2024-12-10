@@ -314,7 +314,7 @@
                     @if($authenticatedUser['account_type_id'] == 7)
                         <td>{{ $posts->endorse_by ?? 'N/A' }}</td>
 
-                        <td>
+                        <td style="max-width: 600px; word-wrap: break-word; padding: 10px;">
 
                         @if(empty($posts->tasks) || !is_array($posts->tasks) || count($posts->tasks) == 0)
                                 @php
@@ -590,11 +590,12 @@
 
 <!-- disable endorse button to avoid duplicates -->
 <script>
+$(document).ready(function () {
     $('#endorseForm').on('submit', function (event) {
         event.preventDefault(); // Prevent default form submission
 
         const formData = $(this).serialize(); // Serialize the form data
-        const endorseButton = $('#endorseButton'); // Assuming the button has this ID
+        const endorseButton = $('#endorseButton'); // Get the endorse button
 
         // Disable the button immediately after form submission
         endorseButton.addClass('disabled').attr('disabled', true).text('Endorsed');
@@ -606,10 +607,10 @@
             success: function (response) {
                 // Check if the response indicates success
                 if (response.success) {
-                    // Hide the modal and update the button state
+                    // Hide the modal after success
                     $('#endorseModal').modal('hide');
 
-                    // Update the button to show "Endorsed" status on the page
+                    // Update the button state on the page
                     endorseButton.text('Endorsed').attr('disabled', true).addClass('disabled');
 
                     // Redirect to the posts.index page after success
@@ -627,6 +628,7 @@
             }
         });
     });
+});
 
 </script>
 
