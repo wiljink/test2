@@ -729,38 +729,6 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 
-// const tasksContainer = document.getElementById('tasksContainer');
-// const addTaskButton = document.getElementById('addTaskButton');
-// const removeTaskButton = document.getElementById('removeTaskButton');
-
-// addTaskButton.addEventListener('click', function () {
-//     const newTaskInput = document.createElement('input');
-//     newTaskInput.type = 'text';
-//     newTaskInput.name = 'tasks[]';
-//     newTaskInput.className = 'form-control mb-2';
-//     newTaskInput.placeholder = `Action ${tasksContainer.childElementCount + 1}`;
-//     tasksContainer.appendChild(newTaskInput);
-
-//     removeTaskButton.style.display = tasksContainer.childElementCount > 1 ? 'inline' : 'none';
-// });
-
-// removeTaskButton.addEventListener('click', function () {
-//     if (tasksContainer.lastChild) {
-//         tasksContainer.removeChild(tasksContainer.lastChild);
-//         removeTaskButton.style.display = tasksContainer.childElementCount > 1 ? 'inline' : 'none';
-//     }
-// });
-
-// // Prevent duplicate entries in the tasks
-// tasksContainer.addEventListener('change', function () {
-//     const taskValues = Array.from(tasksContainer.querySelectorAll('input')).map(input => input.value);
-//     const uniqueValues = new Set(taskValues);
-
-//     if (taskValues.length !== uniqueValues.size) {
-//         alert('Duplicate task detected. Please ensure all tasks are unique.');
-//     }
-// });
-
 </script>
 
 
