@@ -549,96 +549,11 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
 
 
-<!-- analyzemodalform it will populate the modal text field -->
-<script>
 
-    $(document).on('click', '#analyzeButton', function () {
-        const postId = $(this).data('id');
-        const postName = $(this).data('name');
-        const postBranchName = $(this).data('branch');
-        const postContact = $(this).data('contact');
-        const postMessage = $(this).data('message');
-
-        $('#posts_id').val(postId);
-        $('#analyzePostName').val(postName);
-        $('#analyzeBranch').val(postBranchName || '');
-        $('#analyzeContact').val(postContact || '');
-        $('#analyzeMessage').val(postMessage || '');
-
-    });
-
-</script> 
-
-<!-- <script>
-    $(document).on('click', '#analyzeButton', function () {
-        const postId = $(this).data('id');
-        const postName = $(this).data('name');
-        const postBranchName = $(this).data('branch');
-        const postContact = $(this).data('contact');
-        const postMessage = $(this).data('message');
-        const tasks = $(this).data('tasks') || []; // Retrieve tasks array or set as empty
-
-        // Populate the main fields
-        $('#posts_id').val(postId);
-        $('#analyzePostName').val(postName);
-        $('#analyzeBranch').val(postBranchName || '');
-        $('#analyzeContact').val(postContact || '');
-        $('#analyzeMessage').val(postMessage || '');
-
-        // Populate task inputs
-        const taskContainer = $('#tasksContainer');
-        taskContainer.empty(); // Clear any existing inputs
-
-        if (tasks.length > 0) {
-            // Populate inputs for each task in the array
-            tasks.forEach(task => {
-                const taskInput = `
-                    <input type="text" name="tasks[]" class="form-control mb-2" value="${task}" placeholder="Task" required>
-                `;
-                taskContainer.append(taskInput);
-            });
-        } else {
-            // Add a single empty input if no tasks are provided
-            const defaultTaskInput = `
-                <input type="text" name="tasks[]" class="form-control mb-2" placeholder="Task" required>
-            `;
-            taskContainer.append(defaultTaskInput);
-        }
-    });
-</script> -->
-
-
-
-
-<!-- add task and less task button -->
-<script>
-    $(document).ready(function() {
-        // Add Task functionality
-        $(document).on('click', '#addTaskButton', function () {
-            const taskInput = '<input type="text" name="tasks[]" class="form-control mb-2" placeholder="Action" required>';
-            $('#tasksContainer').append(taskInput);
-
-            // Show "Remove Task" button when at least one task is added
-            $('#removeTaskButton').show();
-        });
-
-        // Remove Task functionality
-        $(document).on('click', '#removeTaskButton', function () {
-            // Remove the last task input field
-            $('#tasksContainer input').last().remove();
-
-            // Hide "Remove Task" button if there are no more task fields
-            if ($('#tasksContainer input').length === 0) {
-                $('#removeTaskButton').hide();
-            }
-        });
-    });
-</script>
-
-
-<!-- disable endorse button to avoid duplicates -->
+<!-- endorseModal Form and disable endorse link -->
 <script>
 $(document).ready(function () {
+    // Handle form submission for endorsing
     $('#endorseForm').on('submit', function (event) {
         event.preventDefault(); // Prevent default form submission
 
@@ -676,113 +591,140 @@ $(document).ready(function () {
             }
         });
     });
-});
 
-</script>
+    // Populate the endorse modal with post ID and branch manager
+    $('#endorseModal').on('show.bs.modal', function (event) {
+        var button = event.relatedTarget; // Button that triggered the modal
+        var postId = button.getAttribute('data-id'); // Extract the post ID
+        var branchId = button.getAttribute('data-branch'); // Extract the branch ID
 
-<!-- populate endorse to select value with their corresponding branch manager -->
-<script>
+        // Populate the hidden input with the post ID
+        document.getElementById('post_id').value = postId;
 
-    document.addEventListener('DOMContentLoaded', function () {
-        $('#endorseModal').on('show.bs.modal', function (event) {
-            var button = event.relatedTarget; // Button that triggered the modal
-            var postId = button.getAttribute('data-id'); // Extract the post ID
-            var branchId = button.getAttribute('data-branch'); // Extract the branch ID
-
-            // Populate the hidden input with the post ID
-            document.getElementById('post_id').value = postId;
-
-            // Pre-select the branch manager in the dropdown
-            var endorseToSelect = document.getElementById('endorseTo');
-            for (let i = 0; i < endorseToSelect.options.length; i++) {
-                const option = endorseToSelect.options[i];
-                if (option.getAttribute('data-branch-id') === branchId) {
-                    option.selected = true;
-                    break;
-                }
+        // Pre-select the branch manager in the dropdown
+        var endorseToSelect = document.getElementById('endorseTo');
+        for (let i = 0; i < endorseToSelect.options.length; i++) {
+            const option = endorseToSelect.options[i];
+            if (option.getAttribute('data-branch-id') === branchId) {
+                option.selected = true;
+                break;
             }
-        });
-    });
-</script>
-
-
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    const saveProgressButton = document.getElementById('saveProgressButton');
-    const resolveButton = document.getElementById('resolvedButton');
-
-    // Add event listener for the "Save Progress" button
-    saveProgressButton.addEventListener('click', function () {
-        saveProgressButton.disabled = true; // Disable button to prevent multiple clicks
-        saveProgressButton.classList.add('loading');
-        submitForm('In Progress', saveProgressButton);
-    });
-
-    // Add event listener for the "Resolve" button
-    resolveButton.addEventListener('click', function () {
-        resolveButton.disabled = true; // Disable button to prevent multiple clicks
-        resolveButton.classList.add('loading');
-        submitForm('Resolved', resolveButton);
-    });
-
-    function submitForm(status, button) {
-        console.log('Submitting form with status:', status);
-
-        const analyzeForm = document.getElementById('analyzeForm');
-        if (!analyzeForm) {
-            console.error('Form not found');
-            return;
         }
-
-        const formData = new FormData(analyzeForm);
-
-        // Collect tasks[] values without duplicating
-        const taskInputs = document.querySelectorAll('input[name="tasks[]"]');
-        const uniqueTasks = [...new Set(Array.from(taskInputs).map(input => input.value.trim()))];
-
-        uniqueTasks.forEach(task => {
-            if (task) { // Ensure no empty tasks are added
-                formData.append('tasks[]', task);
-            }
-        });
-
-        formData.append('status', status);
-
-        fetch('{{ route("posts.analyze") }}', {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-            },
-            body: formData
-        })
-        .then(response => {
-            if (!response.ok) {
-                return response.text().then(text => {
-                    throw new Error(text || 'An error occurred.');
-                });
-            }
-            return response.text(); // Get response as text (HTML)
-        })
-        .then(html => {
-            // Redirect to posts.index after success
-            window.location.href = '{{ route("posts.index") }}';
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            // Handle the error and reset the button
-            button.disabled = false;
-            button.classList.remove('loading');
-        });
-    }
+    });
 });
-
-
 </script>
 
 
 
+<!-- analyzeMOdal fields with resolve and save progress -->
+<script>
+    $(document).ready(function() {
+        // Analyze Button functionality: Populating the modal fields
+        $(document).on('click', '#analyzeButton', function () {
+            const postId = $(this).data('id');
+            const postName = $(this).data('name');
+            const postBranchName = $(this).data('branch');
+            const postContact = $(this).data('contact');
+            const postMessage = $(this).data('message');
 
+            // Set the form values in the modal
+            $('#posts_id').val(postId);
+            $('#analyzePostName').val(postName);
+            $('#analyzeBranch').val(postBranchName || '');
+            $('#analyzeContact').val(postContact || '');
+            $('#analyzeMessage').val(postMessage || '');
+        });
 
+        // Add Task functionality
+        $(document).on('click', '#addTaskButton', function () {
+            const taskInput = '<input type="text" name="tasks[]" class="form-control mb-2" placeholder="Action" required>';
+            $('#tasksContainer').append(taskInput);
+
+            // Show "Remove Task" button when at least one task is added
+            $('#removeTaskButton').show();
+        });
+
+        // Remove Task functionality
+        $(document).on('click', '#removeTaskButton', function () {
+            // Remove the last task input field
+            $('#tasksContainer input').last().remove();
+
+            // Hide "Remove Task" button if there are no more task fields
+            if ($('#tasksContainer input').length === 0) {
+                $('#removeTaskButton').hide();
+            }
+        });
+
+        // Handle Save Progress and Resolve Button functionality
+        const saveProgressButton = $('#saveProgressButton');
+        const resolveButton = $('#resolvedButton');
+
+        // Add event listener for the "Save Progress" button
+        saveProgressButton.on('click', function () {
+            saveProgressButton.prop('disabled', true); // Disable button to prevent multiple clicks
+            saveProgressButton.addClass('loading');
+            submitForm('In Progress', saveProgressButton);
+        });
+
+        // Add event listener for the "Resolve" button
+        resolveButton.on('click', function () {
+            resolveButton.prop('disabled', true); // Disable button to prevent multiple clicks
+            resolveButton.addClass('loading');
+            submitForm('Resolved', resolveButton);
+        });
+
+        function submitForm(status, button) {
+            console.log('Submitting form with status:', status);
+
+            const analyzeForm = $('#analyzeForm')[0];
+            if (!analyzeForm) {
+                console.error('Form not found');
+                return;
+            }
+
+            const formData = new FormData(analyzeForm);
+
+            // Collect tasks[] values without duplicating
+            const taskInputs = $('input[name="tasks[]"]');
+            const uniqueTasks = [...new Set(taskInputs.map((_, input) => $(input).val().trim()).get())];
+
+            uniqueTasks.forEach(task => {
+                if (task) { // Ensure no empty tasks are added
+                    formData.append('tasks[]', task);
+                }
+            });
+
+            formData.append('status', status);
+
+            // Make the AJAX request
+            fetch('{{ route("posts.analyze") }}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.text().then(text => {
+                        throw new Error(text || 'An error occurred.');
+                    });
+                }
+                return response.text(); // Get response as text (HTML)
+            })
+            .then(html => {
+                // Redirect to posts.index after success
+                window.location.href = '{{ route("posts.index") }}';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                // Handle the error and reset the button
+                button.prop('disabled', false);
+                button.removeClass('loading');
+            });
+        }
+    });
+</script>
 
 
 <!-- <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script> -->

@@ -126,6 +126,7 @@ class PostController extends Controller
             'tasks' => 'nullable|array',
 
         ]);
+        
 
         // Find the post by ID
         $post = Post::find($validatedData['posts_id']);
