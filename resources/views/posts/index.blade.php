@@ -436,7 +436,7 @@
                             <option value="" selected disabled>Select Branch Manager</option>
                                 @foreach($branches as $branch)
                                     @if($branch['id'] == 23)
-                                        @foreach($branch['branchManager'] as $manager)
+                                        @foreach($branch['head_office_management'] as $manager)
                                             <option value="{{ $manager['id'] }}" data-branch-id="{{ $branch['id'] }}">
                                                 {{ $manager['fullname'] }}
                                             </option>
@@ -448,7 +448,6 @@
                                         </option>
                                     @endif
                                 @endforeach
-
 
                         </select>
                     </div>

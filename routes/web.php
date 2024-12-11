@@ -43,9 +43,6 @@ Route::middleware(LoginMiddleware::class)->group(function () {
 
     Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
 
-
-
-
 });
 
 Route::post('/posts', [PostController::class, 'store'])->name('posts.store');
