@@ -434,12 +434,22 @@
                         <label for="endorseTo" class="form-label">Endorse To</label>
                         <select class="form-select" id="endorseTo" name="endorse_to" required>
                             <option value="" selected disabled>Select Branch Manager</option>
-                            @foreach($branches as $branch)
-                                <option value="{{ optional($branch['branch_manager'])['id'] }}"
-                                        data-branch-id="{{ $branch['id'] }}">
-                                    {{ optional($branch['branch_manager'])['fullname'] }}
-                                </option>
-                            @endforeach
+                                @foreach($branches as $branch)
+                                    @if($branch['id'] == 23)
+                                        @foreach($branch['branchManager'] as $manager)
+                                            <option value="{{ $manager['id'] }}" data-branch-id="{{ $branch['id'] }}">
+                                                {{ $manager['fullname'] }}
+                                            </option>
+                                        @endforeach
+                                    @else
+                                        <option value="{{ optional($branch['branch_manager'])['id'] }}"
+                                                data-branch-id="{{ $branch['id'] }}">
+                                            {{ optional($branch['branch_manager'])['fullname'] }}
+                                        </option>
+                                    @endif
+                                @endforeach
+
+
                         </select>
                     </div>
 
@@ -558,7 +568,46 @@
 
     });
 
-</script>
+</script> 
+
+<!-- <script>
+    $(document).on('click', '#analyzeButton', function () {
+        const postId = $(this).data('id');
+        const postName = $(this).data('name');
+        const postBranchName = $(this).data('branch');
+        const postContact = $(this).data('contact');
+        const postMessage = $(this).data('message');
+        const tasks = $(this).data('tasks') || []; // Retrieve tasks array or set as empty
+
+        // Populate the main fields
+        $('#posts_id').val(postId);
+        $('#analyzePostName').val(postName);
+        $('#analyzeBranch').val(postBranchName || '');
+        $('#analyzeContact').val(postContact || '');
+        $('#analyzeMessage').val(postMessage || '');
+
+        // Populate task inputs
+        const taskContainer = $('#tasksContainer');
+        taskContainer.empty(); // Clear any existing inputs
+
+        if (tasks.length > 0) {
+            // Populate inputs for each task in the array
+            tasks.forEach(task => {
+                const taskInput = `
+                    <input type="text" name="tasks[]" class="form-control mb-2" value="${task}" placeholder="Task" required>
+                `;
+                taskContainer.append(taskInput);
+            });
+        } else {
+            // Add a single empty input if no tasks are provided
+            const defaultTaskInput = `
+                <input type="text" name="tasks[]" class="form-control mb-2" placeholder="Task" required>
+            `;
+            taskContainer.append(defaultTaskInput);
+        }
+    });
+</script> -->
+
 
 
 
