@@ -525,7 +525,7 @@
                     </div>
 
                         <button type="button" id="addTaskButton" class="btn btn-secondary">Add Task</button>
-                        <button type="button" id="removeTaskButton" class="btn btn-danger" style="display: none;">Less Task</button>
+                        <!-- <button type="button" id="removeTaskButton" class="btn btn-danger" style="display: none;">Less Task</button> -->
                     </div>
 
                     <!-- Buttons without inline JavaScript -->
@@ -619,6 +619,8 @@ $(document).ready(function () {
 <!-- analyzeModal for resolved and save progress -->
  <script>
 $(document).ready(function () {
+    let removedTasks = []; // Array to store removed tasks
+
     // When the analyze button is clicked, populate modal fields
     $(document).on('click', '#analyzeButton', function () {
         const postId = $(this).data('id');
@@ -626,8 +628,10 @@ $(document).ready(function () {
         const postBranchName = $(this).data('branch');
         const postContact = $(this).data('contact');
         const postMessage = $(this).data('message');
-        let existingTasks = $(this).data('tasks'); // Get tasks from data-tasks attribute
+        let existingTasks = $(this).data('tasks') || []; // Get tasks from data-tasks attribute
 
+        // Reset removedTasks array
+        removedTasks = [];
 
         // Set form values in the modal
         $('#posts_id').val(postId);
@@ -642,38 +646,58 @@ $(document).ready(function () {
 
         if (existingTasks.length > 0) {
             existingTasks.forEach(function (task, index) {
-                const taskInput = `<input type="text" name="tasks[]" class="form-control mb-2" placeholder="Action ${index + 1}" value="${task}" required>`;
-                tasksContainer.append(taskInput);
+                const taskHtml = `
+                    <div class="task-item mb-2 d-flex align-items-center">
+                        <input type="text" name="tasks[]" class="form-control me-2" placeholder="Action ${index + 1}" value="${task}" required>
+                        <button type="button" class="btn btn-danger btn-sm remove-task" data-task="${task}">Remove</button>
+                    </div>`;
+                tasksContainer.append(taskHtml);
             });
-            // Show "Remove Task" button if tasks exist
             $('#removeTaskButton').show();
         } else {
-            // Add a default input field if no tasks exist
-            const taskInput = '<input type="text" name="tasks[]" class="form-control mb-2" placeholder="Action 1" required>';
-            tasksContainer.append(taskInput);
+            const defaultTaskHtml = `
+                <div class="task-item mb-2 d-flex align-items-center">
+                    <input type="text" name="tasks[]" class="form-control me-2" placeholder="Action 1" required>
+                    <button type="button" class="btn btn-danger btn-sm remove-task">Remove</button>
+                </div>`;
+            tasksContainer.append(defaultTaskHtml);
             $('#removeTaskButton').hide();
         }
     });
 
     // Add Task functionality
     $(document).on('click', '#addTaskButton', function () {
-        const taskCount = $('#tasksContainer input').length + 1;
-        const taskInput = `<input type="text" name="tasks[]" class="form-control mb-2" placeholder="Action ${taskCount}" required>`;
-        $('#tasksContainer').append(taskInput);
-
-        // Show "Remove Task" button
+        const taskCount = $('#tasksContainer .task-item').length + 1;
+        const newTaskHtml = `
+            <div class="task-item mb-2 d-flex align-items-center">
+                <input type="text" name="tasks[]" class="form-control me-2" placeholder="Action ${taskCount}" required>
+                <button type="button" class="btn btn-danger btn-sm remove-task">Remove</button>
+            </div>`;
+        $('#tasksContainer').append(newTaskHtml);
         $('#removeTaskButton').show();
     });
 
     // Remove Task functionality
-    $(document).on('click', '#removeTaskButton', function () {
-        // Remove the last task input field
-        $('#tasksContainer input').last().remove();
+    $(document).on('click', '.remove-task', function () {
+        const taskInput = $(this).closest('.task-item').find('input[name="tasks[]"]');
+        const taskValue = taskInput.val();
 
-        // Hide "Remove Task" button if no tasks are left
-        if ($('#tasksContainer input').length === 0) {
-            const defaultInput = '<input type="text" name="tasks[]" class="form-control mb-2" placeholder="Action 1" required>';
-            $('#tasksContainer').append(defaultInput);
+        // If the task has a value, add it to removedTasks
+        if (taskValue) {
+            removedTasks.push(taskValue);
+        }
+
+        // Remove the task item from the DOM
+        $(this).closest('.task-item').remove();
+
+        // If no tasks are left, add a default task input
+        if ($('#tasksContainer .task-item').length === 0) {
+            const defaultTaskHtml = `
+                <div class="task-item mb-2 d-flex align-items-center">
+                    <input type="text" name="tasks[]" class="form-control me-2" placeholder="Action 1" required>
+                    <button type="button" class="btn btn-danger btn-sm remove-task">Remove</button>
+                </div>`;
+            $('#tasksContainer').append(defaultTaskHtml);
             $('#removeTaskButton').hide();
         }
     });
@@ -682,16 +706,14 @@ $(document).ready(function () {
     const saveProgressButton = $('#saveProgressButton');
     const resolveButton = $('#resolvedButton');
 
-    // Add event listener for the "Save Progress" button
     saveProgressButton.on('click', function () {
-        saveProgressButton.prop('disabled', true); // Disable button to prevent multiple clicks
+        saveProgressButton.prop('disabled', true);
         saveProgressButton.addClass('loading');
         submitForm('In Progress', saveProgressButton);
     });
 
-    // Add event listener for the "Resolve" button
     resolveButton.on('click', function () {
-        resolveButton.prop('disabled', true); // Disable button to prevent multiple clicks
+        resolveButton.prop('disabled', true);
         resolveButton.addClass('loading');
         submitForm('Resolved', resolveButton);
     });
@@ -717,6 +739,11 @@ $(document).ready(function () {
             }
         });
 
+        // Append removed tasks to the form data
+        removedTasks.forEach(task => {
+            formData.append('removed_tasks[]', task);
+        });
+
         formData.append('status', status);
 
         // Make the AJAX request
@@ -733,20 +760,19 @@ $(document).ready(function () {
                     throw new Error(text || 'An error occurred.');
                 });
             }
-            return response.text(); // Get response as text (HTML)
+            return response.text();
         })
         .then(html => {
-            // Redirect to posts.index after success
             window.location.href = '{{ route("posts.index") }}';
         })
         .catch(error => {
             console.error('Error:', error);
-            // Handle the error and reset the button
             button.prop('disabled', false);
             button.removeClass('loading');
         });
     }
 });
+
 </script>
 
 <!-- <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script> -->

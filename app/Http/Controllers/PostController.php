@@ -124,9 +124,8 @@ class PostController extends Controller
             'posts_id' => 'required|integer|exists:posts,id',
             'status' => 'required|string|in:In Progress,Resolved',
             'tasks' => 'nullable|array',
-
+            'removed_tasks' => 'nullable|array', // Accept removed tasks
         ]);
-        
 
         // Find the post by ID
         $post = Post::find($validatedData['posts_id']);
@@ -135,44 +134,43 @@ class PostController extends Controller
             return redirect()->back()->with('error', 'Post not found.');
         }
 
+        // Decode the existing tasks from the database
+        $existingTasks = $post->tasks ? json_decode($post->tasks, true) : [];
+
         // Update tasks if provided
         if (!empty($validatedData['tasks'])) {
-            $existingTasks = $post->tasks ? json_decode($post->tasks, true) : [];
-            $mergedTasks = array_unique(array_merge($existingTasks, $validatedData['tasks']));
-            $post->tasks = json_encode($mergedTasks);
+            // Merge the new tasks with existing tasks and remove duplicates
+            $existingTasks = array_unique(array_merge($existingTasks, $validatedData['tasks']));
         }
 
-        
+        // Remove tasks if any are provided in removed_tasks
+        if (!empty($validatedData['removed_tasks'])) {
+            // Filter out removed tasks from the existing tasks
+            $existingTasks = array_filter($existingTasks, function ($task) use ($validatedData) {
+                return !in_array($task, $validatedData['removed_tasks']);
+            });
+        }
 
+        // Save the updated tasks back to the database
+        $post->tasks = json_encode(array_values($existingTasks)); // Re-index tasks to ensure valid JSON
+
+        // Handle status updates
         $currentTime = Carbon::now(); // Capture the current time once
         $status = $validatedData['status'];
 
         if ($status === 'In Progress') {
-            // Set status to "In Progress"
             $post->status = 'In Progress';
-
-            // Save the updated post
-            $post->save();
-
-            // Redirect to the posts.index route with a success message
-            return redirect()->route('posts.index')->with('success', 'Progress saved successfully.');
         } elseif ($status === 'Resolved') {
-            // If the post is endorsed (first time), set the endorsed_date
             if (!$post->endorsed_date) {
                 $post->endorsed_date = $currentTime;
             }
 
-            // Set status to "Resolved"
             $post->status = 'Resolved';
-
-            // Set the resolved_date
             $post->resolved_date = $currentTime;
 
-            // Calculate the difference in days between resolved_date and endorsed_date
             $endorsedDate = Carbon::parse($post->endorsed_date);
             $resolvedDays = $endorsedDate->diff($currentTime);
 
-            // Save the resolved_days as JSON
             $post->resolved_days = json_encode([
                 'total_difference' => $resolvedDays->format('%a days, %h hours, %i minutes, %s seconds'),
                 'days' => $resolvedDays->d,
@@ -180,15 +178,16 @@ class PostController extends Controller
                 'minutes' => $resolvedDays->i,
                 'seconds' => $resolvedDays->s,
             ]);
-
-            // Save the post
-            $post->save();
-            // Redirect to the posts.index route with a success message
-            return redirect()->route('posts.index')->with('success', 'Concern successfully resolved.');
         }
 
-        // Redirect back if the status is invalid
-        return redirect()->back()->with('error', 'Invalid status provided.');
+        // Save the updated post
+        $post->save();
+
+        // Redirect to the posts.index route with a success message
+        $message = $status === 'Resolved' 
+            ? 'Concern successfully resolved.' 
+            : 'Progress saved successfully.';
+        return redirect()->route('posts.index')->with('success', $message);
 
     } catch (\Illuminate\Validation\ValidationException $e) {
         // Handle validation errors
@@ -200,6 +199,7 @@ class PostController extends Controller
         return redirect()->back()->with('error', $e->getMessage());
     }
 }
+
 
 
     public function resolved()
