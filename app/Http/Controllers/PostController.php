@@ -142,11 +142,6 @@ class PostController extends Controller
             $post->tasks = json_encode($mergedTasks);
         }
 
-
-         // Decode tasks if stored as a JSON string
-         if (is_string($post->tasks)) {
-            $post->tasks = json_decode($post->tasks, true);  // Decode JSON string into array
-        }
         
 
         $currentTime = Carbon::now(); // Capture the current time once

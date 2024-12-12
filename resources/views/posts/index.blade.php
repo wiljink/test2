@@ -200,6 +200,7 @@
                     </li>
                 @endif
 
+                
                 <!-- Resolved Concerns (Visible for all) -->
                 <li class="nav-item">
                     <a class="nav-link text-white" href="{{ route('posts.resolved') }}">Resolved Concerns</a>
@@ -371,7 +372,8 @@
                                data-name="{{ $posts->name }}"
                                data-branch="{{ $posts->branch }}" 
                                data-contact="{{ $posts->contact_number }}"
-                               data-message="{{ $posts->message }}">
+                               data-message="{{ $posts->message }}"
+                               data-tasks='{{ json_encode($posts->tasks ? json_decode($posts->tasks) : []) }}'>
                                 ANALYZE
                             </a>
                         @else
@@ -520,7 +522,7 @@
                             <!-- Initial Task -->
                            
                             <input type="text" name="tasks[]" class="form-control mb-2" placeholder="Action 1" required>
-                        </div>
+                    </div>
 
                         <button type="button" id="addTaskButton" class="btn btn-secondary">Add Task</button>
                         <button type="button" id="removeTaskButton" class="btn btn-danger" style="display: none;">Less Task</button>
@@ -615,7 +617,7 @@ $(document).ready(function () {
 </script>
 
 <!-- analyzeModal for resolved and save progress -->
-<script>
+ <script>
 $(document).ready(function () {
     // When the analyze button is clicked, populate modal fields
     $(document).on('click', '#analyzeButton', function () {
@@ -624,7 +626,8 @@ $(document).ready(function () {
         const postBranchName = $(this).data('branch');
         const postContact = $(this).data('contact');
         const postMessage = $(this).data('message');
-        const existingTasks = $(this).data('tasks'); // Get tasks from data-tasks attribute
+        let existingTasks = $(this).data('tasks'); // Get tasks from data-tasks attribute
+
 
         // Set form values in the modal
         $('#posts_id').val(postId);
@@ -633,27 +636,32 @@ $(document).ready(function () {
         $('#analyzeContact').val(postContact || '');
         $('#analyzeMessage').val(postMessage || '');
 
-        // Populate existing tasks, if available
-        if (existingTasks && existingTasks.length > 0) {
-            $('#tasksContainer').empty(); // Clear existing tasks if any
-            existingTasks.forEach(function(task, index) {
+        // Populate tasks dynamically
+        const tasksContainer = $('#tasksContainer');
+        tasksContainer.empty(); // Clear existing tasks
+
+        if (existingTasks.length > 0) {
+            existingTasks.forEach(function (task, index) {
                 const taskInput = `<input type="text" name="tasks[]" class="form-control mb-2" placeholder="Action ${index + 1}" value="${task}" required>`;
-                $('#tasksContainer').append(taskInput);
+                tasksContainer.append(taskInput);
             });
-            // Show "Remove Task" button if there are tasks
+            // Show "Remove Task" button if tasks exist
             $('#removeTaskButton').show();
         } else {
-            // Hide the "Remove Task" button if no tasks exist
+            // Add a default input field if no tasks exist
+            const taskInput = '<input type="text" name="tasks[]" class="form-control mb-2" placeholder="Action 1" required>';
+            tasksContainer.append(taskInput);
             $('#removeTaskButton').hide();
         }
     });
 
     // Add Task functionality
     $(document).on('click', '#addTaskButton', function () {
-        const taskInput = '<input type="text" name="tasks[]" class="form-control mb-2" placeholder="Action" required>';
+        const taskCount = $('#tasksContainer input').length + 1;
+        const taskInput = `<input type="text" name="tasks[]" class="form-control mb-2" placeholder="Action ${taskCount}" required>`;
         $('#tasksContainer').append(taskInput);
 
-        // Show "Remove Task" button when at least one task is added
+        // Show "Remove Task" button
         $('#removeTaskButton').show();
     });
 
@@ -662,8 +670,10 @@ $(document).ready(function () {
         // Remove the last task input field
         $('#tasksContainer input').last().remove();
 
-        // Hide "Remove Task" button if there are no more task fields
+        // Hide "Remove Task" button if no tasks are left
         if ($('#tasksContainer input').length === 0) {
+            const defaultInput = '<input type="text" name="tasks[]" class="form-control mb-2" placeholder="Action 1" required>';
+            $('#tasksContainer').append(defaultInput);
             $('#removeTaskButton').hide();
         }
     });
@@ -738,7 +748,6 @@ $(document).ready(function () {
     }
 });
 </script>
-
 
 <!-- <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script> -->
 <script src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
