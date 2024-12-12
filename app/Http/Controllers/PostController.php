@@ -204,18 +204,20 @@ class PostController extends Controller
 
     public function resolved()
     {
-        // Retrieve all resolved posts
-        $posts = Post::whereNotNull('resolved_days')->get();
+        // Retrieve all concerns with a valid concern_received_date and endorsed_date
+        $posts = Post::whereNotNull('created_at')
+            ->whereNotNull('endorsed_date')
+            ->get();
 
-        // Group posts by branch
+// Group posts by branch
         $groupedPosts = $posts->groupBy('branch');
 
-        // Initialize an array to hold average resolution times for each branch and concern
+// Initialize an array to hold average facilitation times for each branch and concern
         $averagesByBranch = [];
 
-        // Loop through each branch
+// Loop through each branch
         foreach ($groupedPosts as $branch => $branchPosts) {
-            // Group posts by concern within the branch
+// Group posts by concern within the branch
             $postsByConcern = $branchPosts->groupBy('concern');
 
             foreach ($postsByConcern as $concern => $concernPosts) {
@@ -223,23 +225,19 @@ class PostController extends Controller
                 $totalPosts = count($concernPosts);
 
                 foreach ($concernPosts as $post) {
-                    // Decode the resolved_days JSON
-                    $resolvedTime = json_decode($post->resolved_days, true);
+                    // Calculate the difference in seconds between concern_received_date and endorsed_date
+                    $receivedDate = \Carbon\Carbon::parse($post->concern_received_date);
+                    $endorsedDate = \Carbon\Carbon::parse($post->endorsed_date);
 
-                    // Calculate the total time in seconds for this post
-                    $totalSecondsForPost = ($resolvedTime['Days'] ?? 0) * 86400 +
-                        ($resolvedTime['Hours'] ?? 0) * 3600 +
-                        ($resolvedTime['Minutes'] ?? 0) * 60 +
-                        ($resolvedTime['Seconds'] ?? 0);
+                    $diffInSeconds = $endorsedDate->diffInSeconds($receivedDate);
 
-
-                    $totalSeconds += $totalSecondsForPost;
+                    $totalSeconds += $diffInSeconds;
                 }
 
-                // Calculate the average time in seconds for this concern
+// Calculate the average time in seconds for this concern
                 $averageSeconds = $totalSeconds / $totalPosts;
 
-                // Convert seconds into days, hours, minutes, and seconds
+// Convert seconds into days, hours, minutes, and seconds
                 $averageDays = floor($averageSeconds / 86400);
                 $averageSeconds %= 86400;
                 $averageHours = floor($averageSeconds / 3600);
@@ -247,19 +245,24 @@ class PostController extends Controller
                 $averageMinutes = floor($averageSeconds / 60);
                 $averageSeconds %= 60;
 
-                // Store the average resolution time
+// Store the average facilitation time
                 $averagesByBranch[$branch][$concern] = [
                     'days' => $averageDays,
                     'hours' => $averageHours,
                     'minutes' => $averageMinutes,
                     'seconds' => $averageSeconds
                 ];
+                
             }
+            
         }
 
-        // Pass the data to the view
+// Pass the data to the view
         return view('posts.resolved', compact('averagesByBranch'));
     }
+
+
+    
     public function facilitate()
     {
         // Retrieve all concerns with a valid concern_received_date and endorsed_date
@@ -310,7 +313,9 @@ class PostController extends Controller
                     'minutes' => $averageMinutes,
                     'seconds' => $averageSeconds
                 ];
+                
             }
+            
         }
 
 // Pass the data to the view

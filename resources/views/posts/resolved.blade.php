@@ -13,43 +13,47 @@
 
     <!-- Custom Styles -->
     <style>
-        body {
-            font-family: 'Poppins', sans-serif;
-            background-color: #f8f9fa;
-        }
+    body {
+        font-family: 'Poppins', sans-serif;
+        background-color: #f8f9fa;
+    }
 
-        h1, h2 {
-            font-weight: 700; /* Bold */
-        }
+    h1, h2 {
+        font-weight: 700; /* Bold */
+        font-family: 'Poppins', sans-serif; /* Ensure Poppins font for both h1 and h2 */
+        text-align: center;
+        
+    }
 
-        .table th {
-            background: linear-gradient(90deg, #007bff, #6c757d);
-            color: #fff;
-        }
+    .table th {
+        background: linear-gradient(90deg, #006400, #228B22); /* Dark green shades */
+        color: #fff;
+    }
 
-        .table td, .table th {
-            font-weight: 600;
-            vertical-align: middle;
-        }
+    .table td, .table th {
+        font-weight: 600;
+        vertical-align: middle;
+    }
 
-        .table-hover tbody tr:hover {
-            background-color: #f1f1f1;
-        }
+    .table-hover tbody tr:hover {
+        background-color: #f1f1f1;
+    }
 
-        .text-primary {
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
+    .text-primary {
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
 
-        .table-container {
-            margin: 0 auto;
-            max-width: 90%;
-        }
-    </style>
+    .table-container {
+        margin: 0 auto;
+        max-width: 90%;
+    }
+</style>
+
 </head>
 <body>
     <div class="container-fluid py-5">
-        <h1 class="text-center mb-4 text-primary">Resolve Concern</h1>
+        <h1>Resolve Concern</h1>
 
         @foreach ($averagesByBranch as $branchName => $concerns)
             <div class="text-center mb-5">
