@@ -52,8 +52,10 @@
 
 </head>
 <body>
+
+
     <div class="container-fluid py-5">
-        <h1>Resolve Concern</h1>
+        <h1>Resolved Concern</h1>
 
         @foreach ($averagesByBranch as $branchName => $concerns)
             <div class="text-center mb-5">

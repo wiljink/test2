@@ -212,7 +212,9 @@ public function resolved()
     // Check if branch_id is 23 (admin or specific branch condition)
     if ($authenticatedUser['user']['branch_id'] === 23) {
         // If the branch is 23, fetch all posts
-        $posts = Post::whereNotNull('created_at')->whereNotNull('endorsed_date')->get();
+        $posts = Post::whereNotNull('created_at')
+            ->whereNotNull('endorsed_date')
+            ->get();
     } else {
         // Otherwise, fetch posts only for the authenticated user's branch
         $posts = Post::whereNotNull('created_at')
@@ -233,6 +235,11 @@ public function resolved()
         $postsByConcern = $branchPosts->groupBy('concern');
 
         foreach ($postsByConcern as $concern => $concernPosts) {
+            // Exclude posts with null or empty concern
+            if (empty($concern)) {
+                continue;
+            }
+
             $totalSeconds = 0;
             $totalPosts = count($concernPosts);
 
@@ -247,23 +254,25 @@ public function resolved()
             }
 
             // Calculate the average time in seconds for this concern
-            $averageSeconds = $totalSeconds / $totalPosts;
+            if ($totalPosts > 0) {
+                $averageSeconds = $totalSeconds / $totalPosts;
 
-            // Convert seconds into days, hours, minutes, and seconds
-            $averageDays = floor($averageSeconds / 86400);
-            $averageSeconds %= 86400;
-            $averageHours = floor($averageSeconds / 3600);
-            $averageSeconds %= 3600;
-            $averageMinutes = floor($averageSeconds / 60);
-            $averageSeconds %= 60;
+                // Convert seconds into days, hours, minutes, and seconds
+                $averageDays = floor($averageSeconds / 86400);
+                $averageSeconds %= 86400;
+                $averageHours = floor($averageSeconds / 3600);
+                $averageSeconds %= 3600;
+                $averageMinutes = floor($averageSeconds / 60);
+                $averageSeconds %= 60;
 
-            // Store the average facilitation time
-            $averagesByBranch[$branch][$concern] = [
-                'days' => $averageDays,
-                'hours' => $averageHours,
-                'minutes' => $averageMinutes,
-                'seconds' => $averageSeconds
-            ];
+                // Store the average facilitation time for the concern
+                $averagesByBranch[$branch][$concern] = [
+                    'days' => $averageDays,
+                    'hours' => $averageHours,
+                    'minutes' => $averageMinutes,
+                    'seconds' => $averageSeconds
+                ];
+            }
         }
     }
 

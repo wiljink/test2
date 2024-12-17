@@ -73,6 +73,8 @@
         .general-btn {
             background-color: #17a2b8;
         }
+      
+
 
         /* Teal */
     </style>
@@ -116,7 +118,14 @@
         tr:nth-child(even) {
             background-color: #f9f9f9;
         }
+        .expanded-column {
+            width: auto; /* Or a specific value like 400px */
+            max-width: 800px;
+            word-wrap: break-word;
+            padding: 10px;
+        }
     </style>
+    
     <style>
         /* Base button style */
 .save-progress-btn {
@@ -269,7 +278,7 @@
 
 <div class="container d-flex flex-column align-items-center my-4" style="min-height: 100vh;">
 
-<table class="table">
+<table class="table" >
     <thead>
         <tr>
             <th scope="col">ID</th>
@@ -303,6 +312,9 @@
                     <td>
                         @foreach($branches as $branch)
                             @if($posts->branch == $branch['id'])
+                                @php 
+                                $myBranch = $branch['branch_name'];
+                                @endphp
                                 {{ $branch['branch_name'] }}
                             @endif
                         @endforeach
@@ -315,7 +327,8 @@
                     @if($authenticatedUser['account_type_id'] == 7)
                         <td>{{ $posts->endorse_by ?? 'N/A' }}</td>
 
-                        <td style="max-width: 600px; word-wrap: break-word; padding: 10px;">
+                        <td class="expanded-column">
+
 
                         @if(empty($posts->tasks) || !is_array($posts->tasks) || count($posts->tasks) == 0)
                                 @php
@@ -323,7 +336,7 @@
                                 @endphp
 
                                 @if($tasks && is_array($tasks) && count($tasks) > 0)
-                                    <ol style="font-family: 'Poppins', sans-serif; text-align: justify;">
+                                    <ol style="font-family: 'Poppins', sans-serif;">
                                         @foreach($tasks as $task)
                                             <li>{{ $task }}</li>
                                         @endforeach
@@ -370,7 +383,7 @@
                                data-bs-target="#analyzeModal" 
                                data-id="{{ $posts->id }}"
                                data-name="{{ $posts->name }}"
-                               data-branch="{{ $posts->branch }}" 
+                               data-branch="{{ $myBranch }}" 
                                data-contact="{{ $posts->contact_number }}"
                                data-message="{{ $posts->message }}"
                                data-tasks='{{ json_encode($posts->tasks ? json_decode($posts->tasks) : []) }}'>
@@ -380,15 +393,16 @@
                             @if($posts->status === 'Resolved')
                                 <!-- Do not render Endorse button for resolved concerns -->
                             @else
-                                <a href="#" id="endorseButton" 
-                                   class="btn btn-primary @if($posts->status === 'Endorsed') disabled @endif"
-                                   data-bs-toggle="modal" 
-                                   data-bs-target="#endorseModal" 
-                                   data-id="{{ $posts->id }}" 
-                                   data-branch="{{ $posts->branch }}" 
-                                   data-branch-manager-id="{{ optional($posts->branch_manager)->id }}">
+                            <a href="#" id="endorseButton" 
+                                class="btn btn-primary @if($posts->status === 'Endorsed' || $posts->status === 'In Progress') disabled @endif"
+                                data-bs-toggle="modal" 
+                                data-bs-target="#endorseModal" 
+                                data-id="{{ $posts->id }}" 
+                                data-branch="{{ $posts->branch }}"
+                                data-branch-manager-id="{{ optional($posts->branch_manager)->id }}">
                                     ENDORSE
-                                </a>
+                            </a>
+
                             @endif
                         @endif
                     </td>
@@ -625,18 +639,18 @@ $(document).ready(function () {
     $(document).on('click', '#analyzeButton', function () {
         const postId = $(this).data('id');
         const postName = $(this).data('name');
-        const postBranchName = $(this).data('branch');
+        const postBranchName = $(this).data('branch'); // Get branch name from the data attribute
         const postContact = $(this).data('contact');
         const postMessage = $(this).data('message');
         let existingTasks = $(this).data('tasks') || []; // Get tasks from data-tasks attribute
-
+        // console.log(postBranchName)
         // Reset removedTasks array
         removedTasks = [];
 
         // Set form values in the modal
         $('#posts_id').val(postId);
         $('#analyzePostName').val(postName);
-        $('#analyzeBranch').val(postBranchName || '');
+        $('#analyzeBranch').val(postBranchName || ''); // Set the branch name here
         $('#analyzeContact').val(postContact || '');
         $('#analyzeMessage').val(postMessage || '');
 
