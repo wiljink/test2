@@ -191,8 +191,9 @@
                 <li class="nav-item">
                     <a class="nav-link text-white" href="#">Home</a>
                 </li>
-
+                
                 @if($authenticatedUser['account_type_id'] != 7)
+               
                     <!-- Members Concerns (Only for non-admin users) -->
                     <li class="nav-item">
                         <a class="nav-link text-white" href="{{ route('posts.index') }}">Members Concerns</a>
@@ -200,7 +201,9 @@
                     <li class="nav-item">
                         <a class="nav-link text-white" href="{{ route('posts.facilitate') }}">Facilitated Concerns</a>
                     </li>
+                    
                 @endif
+                
 
                 @if($authenticatedUser['account_type_id'] == 7)
                     <!-- Endorsed Concerns (Only for users with account_type_id == 7) -->
@@ -309,6 +312,7 @@
                     <!-- Post Data -->
                     <td>{{ $posts->id }}</td>
                     <td>{{ $posts->name }}</td>
+
                     <td>
                         @foreach($branches as $branch)
                             @if($posts->branch == $branch['id'])
@@ -319,14 +323,18 @@
                             @endif
                         @endforeach
                     </td>
+
                     <td>{{ $posts->contact_number }}</td>
                     <td>{{ $posts->created_at->format('Y-m-d') }}</td>
                     <td>{{ $posts->concern }}</td>
                     <td>{{ $posts->message }}</td>
+                    
 
                     @if($authenticatedUser['account_type_id'] == 7)
-                        <td>{{ $posts->endorse_by ?? 'N/A' }}</td>
-
+                    <td>{{ $posts->endorse_by_fullname }}</td>
+                   
+                    
+                   
                         <td class="expanded-column">
 
 

@@ -82,39 +82,62 @@ class PostController extends Controller
 
     public function index(Request $request)
     {
-
-        // Fetch branch managers from the external API
+        // Fetch branch data from the external API
         $response1 = Http::get('https://loantracker.oicapp.com/api/v1/branches');
         $branches = $response1->json();
-
+    
+        // Get the authenticated user's data
         $token = session('token');
-
         $response2 = Http::withToken($token)->get("https://loantracker.oicapp.com/api/v1/users/logged-user");
         $authenticatedUser = $response2->json();
-        //updated code
-        // Retrieve only the concerns that belong to the authenticated user
-        $posts = Post::where('branch', $authenticatedUser['user']['branch_id'])->paginate(10);
-
-        // Get the post with tasks stored as JSON
-
-    // // Decode the JSON string of tasks into an array
-    // $tasks = json_decode($post->tasks, true);
-
         
+    
+        // Retrieve posts based on the authenticated user's branch ID or endorse_to field
         if ($authenticatedUser['user']['branch_id'] === 23) {
             $posts = Post::paginate(10);
-        } if ($authenticatedUser['user']['branch_id'] === 23) {
-    } else {
-        $posts = Post::where('endorse_to', $authenticatedUser['user']['oid'])->paginate(10);
+        } else {
+            $posts = Post::where('branch', $authenticatedUser['user']['branch_id'])
+                         ->orWhere('endorse_to', $authenticatedUser['user']['oid'])
+                         ->paginate(10);
+        }
+    
+        // Loop through posts to map 'endorse_by' to 'endorse_by_fullname'
+        foreach ($posts as $post) {
+            if ($post->endorse_by) {
+                // Fetch user by 'endorse_by' oid
+                $response3 = Http::withToken($token)->get("https://loantracker.oicapp.com/api/v1/users/{$post->endorse_by}");
+                
+
+                
+                // Check if the API call was successful
+                if ($response3->successful()) {
+                    //dd($response3->status(), $response3->body());
+                    $user = $response3->json(); // Parse user data
+                    // dd($user);
+                    $post->endorse_by_fullname = $user['user']['officer']['fullname'] ?? 'N/A';
+                    // dd($post);
+                    
+
+                } else {
+                    $post->endorse_by_fullname = 'N/A'; // If the user is not found
+                    
+                }
+            } else {
+                $post->endorse_by_fullname = 'N/A'; // If 'endorse_by' is null
+            }
+            
+        }
+    
+        // Return the view with the posts and other data
+        return view('posts.index', [
+            'data' => $posts,
+            'branches' => $branches['branches'],
+            'authenticatedUser' => $authenticatedUser['user'],
+            
+        ]);
+       
     }
-
-
-        $data = Post::where('status', '!=', 'Resolved')->get();
-
-        // Return the view with filtered data
-        return view('posts.index', ['data' => $posts, 'branches' => $branches['branches'], 'authenticatedUser' => $authenticatedUser['user']]);
-
-    }
+    
 
     public function analyze(Request $request)
 {
