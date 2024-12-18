@@ -227,6 +227,10 @@ class PostController extends Controller
 
 public function resolved()
 {
+    // Fetch branch data from the API
+    $response1 = Http::get('https://loantracker.oicapp.com/api/v1/branches');
+    $branches = $response1->json(); // This will hold the branch data
+
     // Fetch authenticated user's information
     $token = session('token');
     $response2 = Http::withToken($token)->get("https://loantracker.oicapp.com/api/v1/users/logged-user");
@@ -254,6 +258,9 @@ public function resolved()
 
     // Loop through each branch
     foreach ($groupedPosts as $branch => $branchPosts) {
+        // Fetch the branch name from the branch data using the branch_id
+        $branchName = collect($branches['branches'])->firstWhere('id', $authenticatedUser['user']['branch_id'])['branch_name'] ?? 'Unknown Branch';
+
         // Group posts by concern within the branch
         $postsByConcern = $branchPosts->groupBy('concern');
 
@@ -289,6 +296,7 @@ public function resolved()
                 $averageSeconds %= 60;
 
                 // Store the average facilitation time for the concern
+                $averagesByBranch[$branch]['branch_name'] = $branchName; // Store branch name
                 $averagesByBranch[$branch][$concern] = [
                     'days' => $averageDays,
                     'hours' => $averageHours,
@@ -302,6 +310,7 @@ public function resolved()
     // Pass the data to the view
     return view('posts.resolved', compact('averagesByBranch'));
 }
+
 
 
 

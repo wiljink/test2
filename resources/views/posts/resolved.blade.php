@@ -54,12 +54,13 @@
 <body>
 
 
-    <div class="container-fluid py-5">
-        <h1>Resolved Concern</h1>
+<div class="container-fluid py-5">
+    <h1>Resolved Concern</h1>
 
-        @foreach ($averagesByBranch as $branchName => $concerns)
+    @foreach ($averagesByBranch as $branchName => $concerns)
+        @if (isset($concerns['branch_name']) && !empty($concerns)) <!-- Check if the branch has concerns -->
             <div class="text-center mb-5">
-                <h2 class="text-primary">Branch: {{ ucfirst($branchName) }}</h2>
+                <h2 class="text-primary">Branch: {{ ucfirst($concerns['branch_name']) }}</h2> <!-- Display branch name -->
             </div>
             <div class="table-container">
                 <table class="table table-hover table-striped table-bordered text-center">
@@ -69,24 +70,27 @@
                             <th scope="col">Days</th>
                             <th scope="col">Hours</th>
                             <th scope="col">Minutes</th>
-                            <th scope="col">Seconds</th>
+                            <th scope="col">Seconds</th> <!-- Add a column for Seconds if needed -->
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach ($concerns as $concern => $average)
-                            <tr>
-                                <td>{{ ucfirst($concern) }}</td>
-                                <td>{{ $average['days'] ?? 'N/A' }}</td>
-                                <td>{{ $average['hours'] ?? 'N/A' }}</td>
-                                <td>{{ $average['minutes'] ?? 'N/A' }}</td>
-                                <td>{{ $average['seconds'] ?? 'N/A' }}</td>
-                            </tr>
+                        @foreach ($concerns as $concern => $timeData)
+                            @if ($concern !== 'branch_name') <!-- Skip branch name from displaying as a concern -->
+                                <tr>
+                                    <td>{{ ucfirst($concern) }}</td>
+                                    <td>{{ $timeData['days'] }}</td>
+                                    <td>{{ $timeData['hours'] }}</td>
+                                    <td>{{ $timeData['minutes'] }}</td>
+                                    <td>{{ $timeData['seconds'] }}</td>
+                                </tr>
+                            @endif
                         @endforeach
                     </tbody>
                 </table>
             </div>
-        @endforeach
-    </div>
+        @endif
+    @endforeach
+</div>
 
     <!-- Bootstrap JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
