@@ -22,7 +22,6 @@
         font-weight: 700; /* Bold */
         font-family: 'Poppins', sans-serif; /* Ensure Poppins font for both h1 and h2 */
         text-align: center;
-        
     }
 
     .table th {
@@ -53,10 +52,10 @@
 </head>
 <body>
 
-
 <div class="container-fluid py-5">
-    <h1>Resolved Concern</h1>
+    <h1>Average Resolved Concern</h1>
 
+    <!-- Display Branch-wise Average Resolution Time -->
     @foreach ($averagesByBranch as $branchName => $concerns)
         @if (isset($concerns['branch_name']) && !empty($concerns)) <!-- Check if the branch has concerns -->
             <div class="text-center mb-5">
@@ -91,6 +90,50 @@
         @endif
     @endforeach
 </div>
+
+<!-- Display Resolved Posts (Filter by 'Resolved' status) -->
+<div class="container">
+    <h2 class="text-primary text-center mb-4">Resolved Posts</h2>
+    <table class="table table-hover table-striped table-bordered text-center">
+        <thead>
+            <tr>
+                <th scope="col">ID</th>
+                <th scope="col">Name</th>
+                <th scope="col">Branch</th>
+                <th scope="col">Contact Number</th>
+                <th scope="col">Concern Received Date</th>
+                <th scope="col">Concern</th>
+                <th scope="col">Message</th>
+                <th scope="col">Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach($posts as $post)
+                @if($post->status === 'Resolved') <!-- Only show resolved posts -->
+                    <tr>
+                        <td>{{ $post->id }}</td>
+                        <td>{{ $post->name }}</td>
+
+                        <td>
+                            @php 
+                                // Find the branch name that matches the post's branch id
+                                $branchName = collect($branches['branches'])->firstWhere('id', $post->branch)['branch_name'] ?? 'Unknown Branch';
+                            @endphp
+                            {{ $branchName }}
+                        </td>
+
+                        <td>{{ $post->contact_number }}</td>
+                        <td>{{ $post->created_at->format('Y-m-d') }}</td>
+                        <td>{{ $post->concern }}</td>
+                        <td>{{ $post->message }}</td>
+                        <td>{{ $post->status }}</td>
+                    </tr>
+                @endif
+            @endforeach
+        </tbody>
+    </table>
+</div>
+
 
     <!-- Bootstrap JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

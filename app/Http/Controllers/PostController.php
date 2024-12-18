@@ -307,8 +307,11 @@ public function resolved()
         }
     }
 
+    // Fetch posts with 'Resolved' status in the controller
+    $posts = Post::where('status', 'Resolved')->get();
     // Pass the data to the view
-    return view('posts.resolved', compact('averagesByBranch'));
+   // Return the view with both averagesByBranch and posts data
+   return view('posts.resolved', compact('averagesByBranch', 'posts', 'branches'));
 }
 
 
