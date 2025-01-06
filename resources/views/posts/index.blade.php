@@ -261,9 +261,6 @@
 </nav>
 
 
-
-
-
 <!-- Rest of the Page Content -->
 <h1 align='center'>Member Concern</h1>
 <div align='center'>
@@ -281,7 +278,7 @@
 
 <div class="container d-flex flex-column align-items-center my-4" style="min-height: 100vh;">
 
-<table class="table" >
+<table class="table">
     <thead>
         <tr>
             <th scope="col">ID</th>
@@ -291,23 +288,20 @@
             <th scope="col">CONCERN RECEIVED DATE</th>
             <th scope="col">CONCERN</th>
             <th scope="col">MESSAGE</th>
-            
+
             @if($authenticatedUser['account_type_id'] == 7)
-                <th scope="col">PREPARED BY</th>
+                <th scope="col">ENDORSED BY</th>
                 <th scope="col">TASK</th>
                 <th scope="col">DAYS RESOLVED</th>
                 <th scope="col">DATE RESOLVED</th>
                 <th scope="col">STATUS</th>
-                <th scope="col">ACTION</th>
-            @else
-                <th scope="col">ACTION</th> <!-- ACTION column for other users -->
             @endif
+            <th scope="col">ACTION</th>
         </tr>
     </thead>
     <tbody>
         @foreach($data as $posts)
-            <!-- Exclude Resolved Rows -->
-            @if($posts->status !== 'Resolved')
+            @if($posts->status !== 'Resolved') <!-- Exclude Resolved Concerns -->
                 <tr>
                     <!-- Post Data -->
                     <td>{{ $posts->id }}</td>
@@ -316,9 +310,6 @@
                     <td>
                         @foreach($branches as $branch)
                             @if($posts->branch == $branch['id'])
-                                @php 
-                                $myBranch = $branch['branch_name'];
-                                @endphp
                                 {{ $branch['branch_name'] }}
                             @endif
                         @endforeach
@@ -328,61 +319,33 @@
                     <td>{{ $posts->created_at->format('Y-m-d') }}</td>
                     <td>{{ $posts->concern }}</td>
                     <td>{{ $posts->message }}</td>
-                    
 
                     @if($authenticatedUser['account_type_id'] == 7)
-                    <td>{{ $posts->endorse_by_fullname }}</td>
-                   
-                    
-                   
+                        <td>{{ $posts->endorse_by_fullname ?? 'N/A' }}</td>
                         <td class="expanded-column">
+                            @php
+                                $tasks = json_decode($posts->tasks, true);
+                            @endphp
 
-
-                        @if(empty($posts->tasks) || !is_array($posts->tasks) || count($posts->tasks) == 0)
-                                @php
-                                    $tasks = json_decode($posts->tasks, true); // Decode the JSON string to an array
-                                @endphp
-
-                                @if($tasks && is_array($tasks) && count($tasks) > 0)
-                                    <ol style="font-family: 'Poppins', sans-serif;">
-                                        @foreach($tasks as $task)
-                                            <li>{{ $task }}</li>
-                                        @endforeach
-                                    </ol>
-                                @else
-                                <p style="color: red;">No tasks available.</p> <!-- Message if no tasks are available -->
-                                @endif
-                            @endif
-
-                    </td>
-
-
-                        <td>
-                            @if ($posts->resolved_days)
-                                @php
-                                    $resolvedDays = json_decode($posts->resolved_days, true);
-                                @endphp
-                                {{ $resolvedDays['days'] ?? 'N/A' }} days
+                            @if($tasks && is_array($tasks) && count($tasks) > 0)
+                                <ol style="font-family: 'Poppins', sans-serif;">
+                                    @foreach($tasks as $task)
+                                        <li>{{ $task }}</li>
+                                    @endforeach
+                                </ol>
                             @else
-                                N/A
+                                <p style="color: red;">No tasks available.</p>
                             @endif
                         </td>
 
                         <td>
-                            @if ($posts->resolved_days)
-                                @php
-                                    $resolvedDays = json_decode($posts->resolved_days, true);
-                                @endphp
-                                {{ $resolvedDays['resolved_date'] ?? 'N/A' }}
-                            @else
-                                N/A
-                            @endif
+                            {{ $posts->resolved_days ? json_decode($posts->resolved_days, true)['days'] ?? 'N/A' : 'N/A' }} days
                         </td>
 
+                        <td>{{ $posts->resolved_date ?? 'N/A' }}</td>
                         <td>{{ $posts->status ?? 'Pending' }}</td>
                     @endif
-                    
-                    
+
                     <td>
                         @if($authenticatedUser['account_type_id'] == 7)
                             <a href="#" id="analyzeButton" 
@@ -391,26 +354,23 @@
                                data-bs-target="#analyzeModal" 
                                data-id="{{ $posts->id }}"
                                data-name="{{ $posts->name }}"
-                               data-branch="{{ $myBranch }}" 
+                               data-branch="{{ $branch['branch_name'] }}" 
                                data-contact="{{ $posts->contact_number }}"
                                data-message="{{ $posts->message }}"
-                               data-tasks='{{ json_encode($posts->tasks ? json_decode($posts->tasks) : []) }}'>
+                               data-tasks='{{ json_encode($tasks) }}'>
                                 ANALYZE
                             </a>
                         @else
-                            @if($posts->status === 'Resolved')
-                                <!-- Do not render Endorse button for resolved concerns -->
-                            @else
-                            <a href="#" id="endorseButton" 
-                                class="btn btn-primary @if($posts->status === 'Endorsed' || $posts->status === 'In Progress') disabled @endif"
-                                data-bs-toggle="modal" 
-                                data-bs-target="#endorseModal" 
-                                data-id="{{ $posts->id }}" 
-                                data-branch="{{ $posts->branch }}"
-                                data-branch-manager-id="{{ optional($posts->branch_manager)->id }}">
+                            @if($posts->status !== 'Resolved')
+                                <a href="#" id="endorseButton" 
+                                   class="btn btn-primary @if(in_array($posts->status, ['Endorsed', 'In Progress'])) disabled @endif"
+                                   data-bs-toggle="modal" 
+                                   data-bs-target="#endorseModal" 
+                                   data-id="{{ $posts->id }}" 
+                                   data-branch="{{ $posts->branch }}"
+                                   data-branch-manager-id="{{ optional($posts->branch_manager)->id }}">
                                     ENDORSE
-                            </a>
-
+                                </a>
                             @endif
                         @endif
                     </td>
@@ -419,6 +379,7 @@
         @endforeach
     </tbody>
 </table>
+
 
 
 
@@ -534,7 +495,6 @@
                         <textarea class="form-control" name="message" id="analyzeMessage" rows="3" readonly></textarea>
 
                     </div>
-
                     <!-- Hidden Resolved Date -->
 
                     <!-- Tasks Section -->
@@ -551,7 +511,7 @@
                     </div>
 
                     <!-- Buttons without inline JavaScript -->
-                    <button id="resolvedButton" type="button" class="btn btn-success">Resolved</button>
+                    <button type="submit" class="btn btn-success">Resolved</button>
                     <button id="saveProgressButton" type="button" class="btn btn-primary">Save Progress</button>
 
 

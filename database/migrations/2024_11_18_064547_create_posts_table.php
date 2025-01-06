@@ -25,6 +25,7 @@ return new class extends Migration
             $table->timestamp('endorsed_date')->nullable();  // Add 'endorsed_date' column
             $table->timestamp('resolved_date')->nullable();  // Add 'resolved_date' column
             $table->json('resolved_days')->nullable();
+            $table->string('resolve_by')->nullable();
             $table->timestamps();
         });
         

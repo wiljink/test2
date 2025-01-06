@@ -104,6 +104,7 @@
                 <th scope="col">Concern Received Date</th>
                 <th scope="col">Concern</th>
                 <th scope="col">Message</th>
+                <th scope="col">Resolved By</th>
                 <th scope="col">Status</th>
             </tr>
         </thead>
@@ -126,6 +127,7 @@
                         <td>{{ $post->created_at->format('Y-m-d') }}</td>
                         <td>{{ $post->concern }}</td>
                         <td>{{ $post->message }}</td>
+                        <!-- <td>{{ $post->resolve_by }}</td> -->
                         <td>{{ $post->status }}</td>
                     </tr>
                 @endif
