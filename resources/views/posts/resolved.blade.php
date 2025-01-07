@@ -127,7 +127,7 @@
                         <td>{{ $post->created_at->format('Y-m-d') }}</td>
                         <td>{{ $post->concern }}</td>
                         <td>{{ $post->message }}</td>
-                        <!-- <td>{{ $post->resolve_by }}</td> -->
+                        <td>{{ $post->resolve_by }}</td> 
                         <td>{{ $post->status }}</td>
                     </tr>
                 @endif

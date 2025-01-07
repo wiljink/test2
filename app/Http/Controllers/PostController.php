@@ -213,6 +213,7 @@ class PostController extends Controller
                 : 'Concern successfully resolved and archived.';
     
             return redirect()->route('posts.index')->with('success', $message);
+
         } catch (\Illuminate\Validation\ValidationException $e) {
             return redirect()->back()
                 ->withErrors($e->validator)
@@ -223,15 +224,13 @@ class PostController extends Controller
                 'post_id' => $request->input('posts_id'),
                 'request_data' => $request->all(),
             ]);
-            return redirect()->back()->with('error', 'An error occurred while processing your request.');
+             return redirect()->back()->with('error', 'An error occurred while processing your request.');
+            // return redirect()->route('posts.index')->with('success', $message);
+
         }
     }
     
     
-
-
-
-
     public function resolved()
     {
         // Fetch branch data from the API
