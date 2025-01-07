@@ -511,7 +511,7 @@
                     </div>
 
                     <!-- Buttons without inline JavaScript -->
-                    <button type="submit" class="btn btn-success">Resolved</button>
+                    <button id="resolvedButton" type="submit" class="btn btn-success">Resolved</button>
                     <button id="saveProgressButton" type="button" class="btn btn-primary">Save Progress</button>
 
 
@@ -601,159 +601,118 @@ $(document).ready(function () {
 <!-- analyzeModal for resolved and save progress -->
  <script>
 $(document).ready(function () {
-    let removedTasks = []; // Array to store removed tasks
+    let removedTasks = [];
 
     // When the analyze button is clicked, populate modal fields
     $(document).on('click', '#analyzeButton', function () {
         const postId = $(this).data('id');
         const postName = $(this).data('name');
-        const postBranchName = $(this).data('branch'); // Get branch name from the data attribute
+        const postBranchName = $(this).data('branch');
         const postContact = $(this).data('contact');
         const postMessage = $(this).data('message');
-        let existingTasks = $(this).data('tasks') || []; // Get tasks from data-tasks attribute
-        // console.log(postBranchName)
-        // Reset removedTasks array
-        removedTasks = [];
+        const existingTasks = $(this).data('tasks') || [];
 
-        // Set form values in the modal
+        removedTasks = []; // Reset removed tasks
+
         $('#posts_id').val(postId);
         $('#analyzePostName').val(postName);
-        $('#analyzeBranch').val(postBranchName || ''); // Set the branch name here
+        $('#analyzeBranch').val(postBranchName || '');
         $('#analyzeContact').val(postContact || '');
         $('#analyzeMessage').val(postMessage || '');
 
-        // Populate tasks dynamically
         const tasksContainer = $('#tasksContainer');
-        tasksContainer.empty(); // Clear existing tasks
+        tasksContainer.empty();
 
         if (existingTasks.length > 0) {
-            existingTasks.forEach(function (task, index) {
-                const taskHtml = `
-                    <div class="task-item mb-2 d-flex align-items-center">
-                        <input type="text" name="tasks[]" class="form-control me-2" placeholder="Action ${index + 1}" value="${task}" required>
-                        <button type="button" class="btn btn-danger btn-sm remove-task" data-task="${task}">Remove</button>
-                    </div>`;
-                tasksContainer.append(taskHtml);
-            });
+            existingTasks.forEach((task, index) => appendTask(task, index + 1, tasksContainer));
             $('#removeTaskButton').show();
         } else {
-            const defaultTaskHtml = `
-                <div class="task-item mb-2 d-flex align-items-center">
-                    <input type="text" name="tasks[]" class="form-control me-2" placeholder="Action 1" required>
-                    <button type="button" class="btn btn-danger btn-sm remove-task">Remove</button>
-                </div>`;
-            tasksContainer.append(defaultTaskHtml);
+            appendTask('', 1, tasksContainer);
             $('#removeTaskButton').hide();
         }
     });
 
-    // Add Task functionality
+    // Add Task
     $(document).on('click', '#addTaskButton', function () {
         const taskCount = $('#tasksContainer .task-item').length + 1;
-        const newTaskHtml = `
-            <div class="task-item mb-2 d-flex align-items-center">
-                <input type="text" name="tasks[]" class="form-control me-2" placeholder="Action ${taskCount}" required>
-                <button type="button" class="btn btn-danger btn-sm remove-task">Remove</button>
-            </div>`;
-        $('#tasksContainer').append(newTaskHtml);
+        appendTask('', taskCount, $('#tasksContainer'));
         $('#removeTaskButton').show();
     });
 
-    // Remove Task functionality
+    // Remove Task
     $(document).on('click', '.remove-task', function () {
         const taskInput = $(this).closest('.task-item').find('input[name="tasks[]"]');
         const taskValue = taskInput.val();
-
-        // If the task has a value, add it to removedTasks
-        if (taskValue) {
-            removedTasks.push(taskValue);
-        }
-
-        // Remove the task item from the DOM
+        if (taskValue) removedTasks.push(taskValue);
         $(this).closest('.task-item').remove();
 
-        // If no tasks are left, add a default task input
         if ($('#tasksContainer .task-item').length === 0) {
-            const defaultTaskHtml = `
-                <div class="task-item mb-2 d-flex align-items-center">
-                    <input type="text" name="tasks[]" class="form-control me-2" placeholder="Action 1" required>
-                    <button type="button" class="btn btn-danger btn-sm remove-task">Remove</button>
-                </div>`;
-            $('#tasksContainer').append(defaultTaskHtml);
+            appendTask('', 1, $('#tasksContainer'));
             $('#removeTaskButton').hide();
         }
     });
 
-    // Handle Save Progress and Resolve Button functionality
-    const saveProgressButton = $('#saveProgressButton');
-    const resolveButton = $('#resolvedButton');
-
-    saveProgressButton.on('click', function () {
-        saveProgressButton.prop('disabled', true);
-        saveProgressButton.addClass('loading');
-        submitForm('In Progress', saveProgressButton);
+    // Save Progress and Resolve buttons
+    $('#saveProgressButton').on('click', function () {
+        handleButtonClick('In Progress', $(this));
     });
 
-    resolveButton.on('click', function () {
-        resolveButton.prop('disabled', true);
-        resolveButton.addClass('loading');
-        submitForm('Resolved', resolveButton);
+    $('#resolvedButton').on('click', function () {
+        handleButtonClick('Resolved', $(this));
     });
+
+    function handleButtonClick(status, button) {
+        button.prop('disabled', true).addClass('loading');
+        submitForm(status, button);
+    }
+
+    function appendTask(task, index, container) {
+        const taskHtml = `
+            <div class="task-item mb-2 d-flex align-items-center">
+                <input type="text" name="tasks[]" class="form-control me-2" placeholder="Action ${index}" value="${task}" required>
+                <button type="button" class="btn btn-danger btn-sm remove-task">Remove</button>
+            </div>`;
+        container.append(taskHtml);
+    }
 
     function submitForm(status, button) {
-        console.log('Submitting form with status:', status);
-
         const analyzeForm = $('#analyzeForm')[0];
-        if (!analyzeForm) {
-            console.error('Form not found');
-            return;
-        }
+        if (!analyzeForm) return console.error('Form not found');
 
         const formData = new FormData(analyzeForm);
 
-        // Collect tasks[] values without duplicating
-        const taskInputs = $('input[name="tasks[]"]');
-        const uniqueTasks = [...new Set(taskInputs.map((_, input) => $(input).val().trim()).get())];
-
-        uniqueTasks.forEach(task => {
-            if (task) { // Ensure no empty tasks are added
-                formData.append('tasks[]', task);
-            }
-        });
-
-        // Append removed tasks to the form data
-        removedTasks.forEach(task => {
-            formData.append('removed_tasks[]', task);
-        });
+        // Add tasks and removed tasks
+        const tasks = getUniqueTasks();
+        tasks.forEach(task => formData.append('tasks[]', task));
+        removedTasks.forEach(task => formData.append('removed_tasks[]', task));
 
         formData.append('status', status);
 
-        // Make the AJAX request
         fetch('{{ route("posts.analyze") }}', {
             method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-            },
+            headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
             body: formData
         })
-        .then(response => {
-            if (!response.ok) {
-                return response.text().then(text => {
-                    throw new Error(text || 'An error occurred.');
-                });
-            }
-            return response.text();
-        })
-        .then(html => {
-            window.location.href = '{{ route("posts.index") }}';
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            button.prop('disabled', false);
-            button.removeClass('loading');
-        });
+            .then(response => {
+                if (!response.ok) throw new Error('Failed to submit form');
+                return response.text();
+            })
+            .then(() => {
+                window.location.href = '{{ route("posts.index") }}';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                button.prop('disabled', false).removeClass('loading');
+                alert('An error occurred. Please try again.');
+            });
+    }
+
+    function getUniqueTasks() {
+        const taskInputs = $('input[name="tasks[]"]');
+        return [...new Set(taskInputs.map((_, input) => $(input).val().trim()).get())].filter(task => task);
     }
 });
+
 
 </script>
 
