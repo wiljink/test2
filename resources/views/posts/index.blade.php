@@ -523,6 +523,77 @@
     </div>
 </div>
 
+<!-- Validate Modal -->
+<div class="modal fade" id="validateModal" tabindex="-1" aria-labelledby="validateModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="validateForm" method="POST" action="{{ route('validate.concern') }}">
+                @csrf
+                <div class="modal-header">
+                    <h5 class="modal-title" id="validateModalLabel">Validate Concern</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Hidden Input for Concern ID -->
+                    <input type="hidden" name="id" id="validateConcernId">
+
+                    <!-- Name -->
+                    <div class="mb-3">
+                        <label for="validateName" class="form-label">Name</label>
+                        <input type="text" class="form-control" id="validateName" name="name" readonly>
+                    </div>
+
+                    <!-- Branch -->
+                    <div class="mb-3">
+                        <label for="validateBranch" class="form-label">Branch</label>
+                        <input type="text" class="form-control" id="validateBranch" name="branch" readonly>
+                    </div>
+
+                    <!-- Concern -->
+                    <div class="mb-3">
+                        <label for="validateConcern" class="form-label">Concern</label>
+                        <input type="text" class="form-control" id="validateConcern" name="concern" readonly>
+                    </div>
+
+                    <!-- Message -->
+                    <div class="mb-3">
+                        <label for="validateMessage" class="form-label">Message</label>
+                        <textarea class="form-control" id="validateMessage" name="message" rows="3" readonly></textarea>
+                    </div>
+
+                    <!-- Task -->
+                    <div class="mb-3">
+                        <label for="validateTask" class="form-label">Task</label>
+                        <ul id="validateTask" class="list-group">
+                            <!-- Tasks will be dynamically populated -->
+                        </ul>
+                    </div>
+
+                    <!-- Rate -->
+                    <div class="mb-3">
+                        <label class="form-label">Rate</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="rate" id="rateSatisfied" value="Satisfied" required>
+                            <label class="form-check-label" for="rateSatisfied">Satisfied</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="rate" id="rateUnsatisfied" value="Unsatisfied" required>
+                            <label class="form-check-label" for="rateUnsatisfied">Unsatisfied</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="rate" id="rateUnresolved" value="Unresolved" required>
+                            <label class="form-check-label" for="rateUnresolved">Unresolved</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
 
 
@@ -714,6 +785,42 @@ $(document).ready(function () {
     }
 });
 
+
+</script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+    const validateModal = document.getElementById('validateModal');
+
+    validateModal.addEventListener('show.bs.modal', function (event) {
+        const button = event.relatedTarget; // Button that triggered the modal
+
+        // Extract data from data-* attributes
+        const concernId = button.getAttribute('data-id');
+        const name = button.getAttribute('data-name');
+        const branch = button.getAttribute('data-branch');
+        const concern = button.getAttribute('data-concern');
+        const message = button.getAttribute('data-message');
+        const tasks = JSON.parse(button.getAttribute('data-tasks')) || [];
+
+        // Populate modal fields
+        document.getElementById('validateConcernId').value = concernId;
+        document.getElementById('validateName').value = name;
+        document.getElementById('validateBranch').value = branch;
+        document.getElementById('validateConcern').value = concern;
+        document.getElementById('validateMessage').value = message;
+
+        const taskList = document.getElementById('validateTask');
+        taskList.innerHTML = ''; // Clear existing tasks
+
+        tasks.forEach(task => {
+            const listItem = document.createElement('li');
+            listItem.textContent = task;
+            listItem.classList.add('list-group-item');
+            taskList.appendChild(listItem);
+        });
+    });
+});
 
 </script>
 

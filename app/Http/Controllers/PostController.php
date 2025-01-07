@@ -321,11 +321,6 @@ class PostController extends Controller
         return view('posts.resolved', compact('averagesByBranch', 'posts', 'branches'));
     }
 
-
-
-
-
-
     public function facilitate()
     {
         // Retrieve all concerns with a valid concern_received_date and endorsed_date
@@ -382,4 +377,20 @@ class PostController extends Controller
         // Pass the data to the view
         return view('posts.resolved', compact('averagesByBranch'));
     }
+    
+    public function validateConcern(Request $request)
+{
+    $validatedData = $request->validate([
+        'id' => 'required|exists:posts,id',
+        'rate' => 'required|in:Satisfied,Unsatisfied,Unresolved',
+    ]);
+
+    $concern = Post::findOrFail($validatedData['id']);
+    $concern->rate = $validatedData['rate'];
+    $concern->status = $validatedData['rate'] === 'Satisfied' ? 'Validated' : 'Pending Review';
+    $concern->save();
+
+    return redirect()->back()->with('success', 'Concern validated successfully!');
+    }
+
 }

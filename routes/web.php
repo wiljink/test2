@@ -38,7 +38,8 @@ Route::middleware(LoginMiddleware::class)->group(function () {
 
     Route::get('/resolved-facilitate', [PostController::class, 'facilitate'])->name('posts.facilitate');
 
-
+    // Route to handle validation of a concern
+    Route::post('/concerns/validate', [PostController::class, 'validateConcern'])->name('validate.concern');
 
 
     Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
